@@ -2,9 +2,9 @@ name: SonarCloud Flutter Analysis
 
 on:
   push:
-    branches: ["main", "develop" ]
+    branches: [ "main", "develop" ]
   pull_request:
-    branches: ["main", "develop" ]
+    branches: [ "main", "develop" ]
 
 jobs:
   sonarcloud:
@@ -16,22 +16,42 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Detect Flutter project
+        id: flutter
+        run: |
+          if [ -f "pubspec.yaml" ]; then
+            echo "is_flutter=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_flutter=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Skip (no Flutter project yet)
+        if: steps.flutter.outputs.is_flutter != 'true'
+        run: |
+          echo "No pubspec.yaml found. Skipping Flutter + Sonar analysis for now."
+          echo "Once a Flutter project is added, analysis will run automatically."
+
       - name: Set up Flutter
+        if: steps.flutter.outputs.is_flutter == 'true'
         uses: subosito/flutter-action@v2
         with:
           channel: "stable"
           cache: true
 
       - name: Install dependencies
-        run: flutter pub get || true
+        if: steps.flutter.outputs.is_flutter == 'true'
+        run: flutter pub get
 
       - name: Analyze code
-        run: flutter analyze || true
+        if: steps.flutter.outputs.is_flutter == 'true'
+        run: flutter analyze
 
-      - name: Run tests
+      - name: Run tests (optional)
+        if: steps.flutter.outputs.is_flutter == 'true'
         run: flutter test --coverage || true
 
       - name: SonarCloud Scan
+        if: steps.flutter.outputs.is_flutter == 'true'
         uses: SonarSource/sonarcloud-github-action@v2
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
