@@ -1,4 +1,5 @@
 import '../../../../core/network/http_client.dart';
+// ignore: unused_import
 import '../../../../config/constants/api_endpoints.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../shared/enums/user_role.dart';
@@ -16,6 +17,7 @@ abstract class AuthRemoteDataSource {
 
 /// Auth remote data source implementation
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
+  // ignore: unused_field
   final HttpClient _httpClient;
 
   AuthRemoteDataSourceImpl(this._httpClient);

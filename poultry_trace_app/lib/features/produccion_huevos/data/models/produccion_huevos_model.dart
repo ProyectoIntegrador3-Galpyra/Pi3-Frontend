@@ -5,6 +5,7 @@ class ProduccionHuevosModel extends ProduccionHuevos {
   const ProduccionHuevosModel({
     required super.id,
     required super.galponId,
+    super.loteId,
     required super.fecha,
     required super.cantidadTotal,
     super.huevosRotos,
@@ -15,13 +16,18 @@ class ProduccionHuevosModel extends ProduccionHuevos {
     super.huevosPequeno,
     super.porcentajePostura,
     super.observaciones,
+    super.sincronizado,
     required super.createdAt,
+    required super.updatedAt,
+    super.deletedAt,
   });
 
   factory ProduccionHuevosModel.fromJson(Map<String, dynamic> json) {
+    final now = DateTime.now();
     return ProduccionHuevosModel(
       id: json['id'] as String,
       galponId: json['galpon_id'] as String,
+      loteId: json['lote_id'] as String?,
       fecha: DateTime.parse(json['fecha'] as String),
       cantidadTotal: json['cantidad_total'] as int,
       huevosRotos: json['huevos_rotos'] as int? ?? 0,
@@ -32,7 +38,16 @@ class ProduccionHuevosModel extends ProduccionHuevos {
       huevosPequeno: json['huevos_pequeno'] as int? ?? 0,
       porcentajePostura: (json['porcentaje_postura'] as num?)?.toDouble() ?? 0.0,
       observaciones: json['observaciones'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      sincronizado: true,
+      createdAt: json['created_at'] != null 
+          ? DateTime.parse(json['created_at'] as String) 
+          : now,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : now,
+      deletedAt: json['deleted_at'] != null
+          ? DateTime.parse(json['deleted_at'] as String)
+          : null,
     );
   }
 
@@ -40,6 +55,7 @@ class ProduccionHuevosModel extends ProduccionHuevos {
     return {
       'id': id,
       'galpon_id': galponId,
+      'lote_id': loteId,
       'fecha': fecha.toIso8601String(),
       'cantidad_total': cantidadTotal,
       'huevos_rotos': huevosRotos,
@@ -51,6 +67,8 @@ class ProduccionHuevosModel extends ProduccionHuevos {
       'porcentaje_postura': porcentajePostura,
       'observaciones': observaciones,
       'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
+      if (deletedAt != null) 'deleted_at': deletedAt!.toIso8601String(),
     };
   }
 
@@ -58,6 +76,7 @@ class ProduccionHuevosModel extends ProduccionHuevos {
     return ProduccionHuevosModel(
       id: entity.id,
       galponId: entity.galponId,
+      loteId: entity.loteId,
       fecha: entity.fecha,
       cantidadTotal: entity.cantidadTotal,
       huevosRotos: entity.huevosRotos,
@@ -68,7 +87,10 @@ class ProduccionHuevosModel extends ProduccionHuevos {
       huevosPequeno: entity.huevosPequeno,
       porcentajePostura: entity.porcentajePostura,
       observaciones: entity.observaciones,
+      sincronizado: entity.sincronizado,
       createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+      deletedAt: entity.deletedAt,
     );
   }
 
@@ -76,6 +98,7 @@ class ProduccionHuevosModel extends ProduccionHuevos {
     return ProduccionHuevos(
       id: id,
       galponId: galponId,
+      loteId: loteId,
       fecha: fecha,
       cantidadTotal: cantidadTotal,
       huevosRotos: huevosRotos,
@@ -86,7 +109,10 @@ class ProduccionHuevosModel extends ProduccionHuevos {
       huevosPequeno: huevosPequeno,
       porcentajePostura: porcentajePostura,
       observaciones: observaciones,
+      sincronizado: sincronizado,
       createdAt: createdAt,
+      updatedAt: updatedAt,
+      deletedAt: deletedAt,
     );
   }
 }

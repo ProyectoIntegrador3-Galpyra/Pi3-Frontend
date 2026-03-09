@@ -19,6 +19,7 @@ class AppScaffold extends StatelessWidget {
     this.resizeToAvoidBottomInset = true,
     this.appBarElevation = 0,
     this.onBackPressed,
+    this.useGradientAppBar = true,
   });
 
   final Widget body;
@@ -35,6 +36,7 @@ class AppScaffold extends StatelessWidget {
   final bool resizeToAvoidBottomInset;
   final double appBarElevation;
   final VoidCallback? onBackPressed;
+  final bool useGradientAppBar;
 
   @override
   Widget build(BuildContext context) {
@@ -42,24 +44,60 @@ class AppScaffold extends StatelessWidget {
       backgroundColor: backgroundColor ?? AppColors.background,
       resizeToAvoidBottomInset: resizeToAvoidBottomInset,
       appBar: title != null || titleWidget != null
-          ? AppBar(
-              title: titleWidget ?? Text(title!),
-              centerTitle: centerTitle,
-              elevation: appBarElevation,
-              actions: actions,
-              leading: leading ??
-                  (showBackButton && Navigator.canPop(context)
-                      ? IconButton(
-                          icon: const Icon(Icons.arrow_back),
-                          onPressed: onBackPressed ?? () => Navigator.pop(context),
-                        )
-                      : null),
-            )
+          ? _buildAppBar(context)
           : null,
       body: body,
       floatingActionButton: floatingActionButton,
       bottomNavigationBar: bottomNavigationBar,
       drawer: drawer,
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
+    if (useGradientAppBar) {
+      return PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppColors.primary,
+                AppColors.accentGreen,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: AppBar(
+            title: titleWidget ?? Text(title!),
+            centerTitle: centerTitle,
+            elevation: appBarElevation,
+            backgroundColor: Colors.transparent,
+            actions: actions,
+            leading: leading ??
+                (showBackButton && Navigator.canPop(context)
+                    ? IconButton(
+                        icon: const Icon(Icons.arrow_back),
+                        onPressed: onBackPressed ?? () => Navigator.pop(context),
+                      )
+                    : null),
+          ),
+        ),
+      );
+    }
+
+    return AppBar(
+      title: titleWidget ?? Text(title!),
+      centerTitle: centerTitle,
+      elevation: appBarElevation,
+      actions: actions,
+      leading: leading ??
+          (showBackButton && Navigator.canPop(context)
+              ? IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: onBackPressed ?? () => Navigator.pop(context),
+                )
+              : null),
     );
   }
 }

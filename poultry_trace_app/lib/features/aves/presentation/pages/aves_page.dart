@@ -6,6 +6,7 @@ import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../core/widgets/loading.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/empty_state.dart';
+import '../../../../core/widgets/gradient_fab.dart';
 import '../controllers/aves_controller.dart';
 import '../widgets/aves_summary_card.dart';
 
@@ -45,19 +46,18 @@ class _AvesPageState extends ConsumerState<AvesPage> {
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          FloatingActionButton.extended(
+          GradientFABWarning(
             heroTag: 'mortalidad',
             onPressed: () => context.push(RoutePaths.mortalidadFormPath(widget.galponId)),
-            icon: const Icon(Icons.warning_amber_outlined),
-            label: const Text('Mortalidad'),
-            backgroundColor: Colors.orange,
+            icon: Icons.warning_amber_outlined,
+            label: 'Mortalidad',
           ),
           const SizedBox(height: 12),
-          FloatingActionButton.extended(
+          GradientFAB(
             heroTag: 'ingreso',
             onPressed: () => context.push(RoutePaths.ingresoAvesForm(widget.galponId)),
-            icon: const Icon(Icons.add),
-            label: const Text('Nuevo Ingreso'),
+            icon: Icons.add,
+            label: 'Nuevo Ingreso',
           ),
         ],
       ),

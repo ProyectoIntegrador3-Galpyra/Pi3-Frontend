@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'route_paths.dart';
+import '../../features/auth/presentation/controllers/auth_controller.dart';
 
 // Auth
 import '../../features/auth/presentation/pages/login_page.dart';
@@ -50,6 +51,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: RoutePaths.home,
     debugLogDiagnostics: true,
+    errorBuilder: (context, state) => Scaffold(
+      appBar: AppBar(title: const Text('Error')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            const SizedBox(height: 16),
+            Text('Página no encontrada: ${state.uri.path}'),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => context.go(RoutePaths.home),
+              child: const Text('Volver al inicio'),
+            ),
+          ],
+        ),
+      ),
+    ),
     routes: [
       // Auth routes
       GoRoute(
@@ -233,38 +252,29 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SettingsPage(),
       ),
     ],
-    errorBuilder: (context, state) => Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 64, color: Colors.red),
-            const SizedBox(height: 16),
-            Text(
-              'Página no encontrada',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8),
-            Text('Ruta: ${state.uri.path}'),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () => context.go(RoutePaths.home),
-              child: const Text('Ir al inicio'),
-            ),
-          ],
-        ),
-      ),
-    ),
     redirect: (context, state) {
-      // TODO: Implement auth redirect logic
-      // final isLoggedIn = ref.read(authStateProvider).isAuthenticated;
-      // final isLoginRoute = state.matchedLocation == RoutePaths.login;
-      // if (!isLoggedIn && !isLoginRoute) {
-      //   return RoutePaths.login;
-      // }
-      // if (isLoggedIn && isLoginRoute) {
-      //   return RoutePaths.home;
-      // }
+      // Obtener estado de autenticación
+      final container = ProviderScope.containerOf(context, listen: false);
+      final authState = container.read(authControllerProvider);
+      
+      final isLoggedIn = authState.isAuthenticated;
+      final isLoginRoute = state.matchedLocation == RoutePaths.login;
+      
+      // Rutas públicas que no requieren autenticación
+      const publicRoutes = [RoutePaths.login];
+      final isPublicRoute = publicRoutes.contains(state.matchedLocation);
+
+      // Si no está autenticado y no está en una ruta pública, redirigir a login
+      if (!isLoggedIn && !isPublicRoute) {
+        return RoutePaths.login;
+      }
+      
+      // Si está autenticado y está en login, redirigir a home
+      if (isLoggedIn && isLoginRoute) {
+        return RoutePaths.home;
+      }
+      
+      // No redirigir
       return null;
     },
   );

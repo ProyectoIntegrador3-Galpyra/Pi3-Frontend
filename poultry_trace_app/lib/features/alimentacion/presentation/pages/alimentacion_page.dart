@@ -6,6 +6,7 @@ import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../core/widgets/loading.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/empty_state.dart';
+import '../../../../core/widgets/gradient_fab.dart';
 import '../controllers/alimentacion_controller.dart';
 import '../widgets/alimentacion_card.dart';
 
@@ -42,10 +43,10 @@ class _AlimentacionPageState extends ConsumerState<AlimentacionPage> {
           },
         ),
       ],
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: GradientFAB(
         onPressed: () => context.push(RoutePaths.alimentacionFormPath(widget.galponId)),
-        icon: const Icon(Icons.add),
-        label: const Text('Registrar'),
+        icon: Icons.add,
+        label: 'Registrar',
       ),
       body: _buildBody(state),
     );

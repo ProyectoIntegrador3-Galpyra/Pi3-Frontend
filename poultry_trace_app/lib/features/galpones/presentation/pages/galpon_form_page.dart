@@ -61,6 +61,7 @@ class _GalponFormPageState extends ConsumerState<GalponFormPage> {
 
   Future<void> _handleSubmit() async {
     if (_formKey.currentState?.validate() ?? false) {
+      final now = DateTime.now();
       final galpon = Galpon(
         id: widget.galponId ?? DateTime.now().millisecondsSinceEpoch.toString(),
         nombre: _nombreController.text.trim(),
@@ -72,7 +73,9 @@ class _GalponFormPageState extends ConsumerState<GalponFormPage> {
             ? _ubicacionController.text.trim()
             : null,
         activo: _activo,
-        createdAt: DateTime.now(),
+        sincronizado: false,
+        createdAt: now,
+        updatedAt: now,
       );
 
       final controller = ref.read(galponesControllerProvider.notifier);

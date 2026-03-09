@@ -2,9 +2,7 @@ import '../storage/local_db.dart';
 
 /// Manager for caching API responses
 class CacheManager {
-  final LocalDb _localDb;
-
-  CacheManager(this._localDb);
+  CacheManager();
 
   /// Cache keys
   static const String galponesKey = 'galpones_list';
@@ -23,31 +21,28 @@ class CacheManager {
     dynamic data, {
     Duration? duration,
   }) async {
-    await _localDb.cacheData(
-      key,
-      data,
-      expiration: duration ?? defaultCacheDuration,
-    );
+    final ttlHours = (duration ?? defaultCacheDuration).inHours;
+    await LocalDb.cacheData(key, data, ttlHours: ttlHours > 0 ? ttlHours : 1);
   }
 
   /// Get cached response
   Future<dynamic> getCachedResponse(String key) async {
-    return await _localDb.getCachedData(key);
+    return await LocalDb.getCachedData(key);
   }
 
   /// Check if cache is valid
   Future<bool> isCacheValid(String key) async {
-    return await _localDb.isCacheValid(key);
+    return await LocalDb.isCacheValid(key);
   }
 
   /// Invalidate specific cache
   Future<void> invalidateCache(String key) async {
-    await _localDb.clearCache(key);
+    await LocalDb.clearCache(key);
   }
 
   /// Invalidate all caches
   Future<void> invalidateAll() async {
-    await _localDb.clearAllCache();
+    await LocalDb.clearAllCache();
   }
 
   /// Cache galpones list

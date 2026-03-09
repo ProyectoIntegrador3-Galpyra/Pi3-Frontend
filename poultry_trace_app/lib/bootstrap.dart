@@ -1,5 +1,4 @@
 import 'package:flutter/services.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'config/di/injector.dart';
 import 'core/storage/local_db.dart';
 
@@ -10,10 +9,7 @@ Future<void> bootstrap() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  // Initialize Hive for local storage
-  await Hive.initFlutter();
-
-  // Initialize local database
+  // Initialize local database (Drift/SQLite)
   await LocalDb.init();
 
   // Setup dependency injection

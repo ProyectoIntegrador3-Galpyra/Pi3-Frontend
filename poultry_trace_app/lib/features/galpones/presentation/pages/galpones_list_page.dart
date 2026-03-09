@@ -6,6 +6,7 @@ import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../core/widgets/loading.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/empty_state.dart';
+import '../../../../core/widgets/gradient_fab.dart';
 import '../controllers/galpones_controller.dart';
 import '../widgets/galpon_card.dart';
 
@@ -40,10 +41,10 @@ class _GalponesListPageState extends ConsumerState<GalponesListPage> {
           },
         ),
       ],
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: GradientFABSecondary(
         onPressed: () => context.push(RoutePaths.galponForm),
-        icon: const Icon(Icons.add),
-        label: const Text('Nuevo'),
+        icon: Icons.add,
+        label: 'Nuevo',
       ),
       body: _buildBody(state),
     );

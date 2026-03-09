@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../config/routes/route_paths.dart';
+import '../../../../config/theme/colors.dart';
 import '../../../../core/widgets/app_scaffold.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 
@@ -98,8 +99,8 @@ class HomePage extends ConsumerWidget {
           child: _buildStatCard(
             'Aves Activas',
             '12,500',
-            Icons.opacity,
-            Colors.blue,
+            Icons.spa_outlined,
+            AppColors.primary,
           ),
         ),
         const SizedBox(width: 12),
@@ -107,8 +108,8 @@ class HomePage extends ConsumerWidget {
           child: _buildStatCard(
             'Producción Hoy',
             '285',
-            Icons.egg,
-            Colors.orange,
+            Icons.egg_outlined,
+            AppColors.secondary,
           ),
         ),
       ],
@@ -121,32 +122,57 @@ class HomePage extends ConsumerWidget {
     IconData icon,
     Color color,
   ) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 12),
-            Text(
-              valor,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              titulo,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
-            ),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            color.withOpacity(0.05),
+            color.withOpacity(0.1),
           ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: color, size: 22),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            valor,
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            titulo,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[500],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -155,50 +181,50 @@ class HomePage extends ConsumerWidget {
     final menuItems = [
       _MenuItem(
         'Galpones',
-        Icons.home_work,
-        Colors.blueGrey,
+        Icons.home_work_outlined,
+        AppColors.primaryDark,
         () => context.push(RoutePaths.galpones),
       ),
       _MenuItem(
         'Aves',
-        Icons.opacity,
-        Colors.blue,
+        Icons.spa_outlined,
+        AppColors.accentGreen,
         () => context.push(RoutePaths.aves),
       ),
       _MenuItem(
         'Producción',
-        Icons.egg,
-        Colors.orange,
+        Icons.egg_outlined,
+        AppColors.secondary,
         () => context.push(RoutePaths.produccion),
       ),
       _MenuItem(
         'Sanidad',
-        Icons.local_hospital,
-        Colors.red,
+        Icons.medical_services_outlined,
+        AppColors.error,
         () => context.push(RoutePaths.sanidad),
       ),
       _MenuItem(
         'Alimentación',
-        Icons.restaurant,
-        Colors.green,
+        Icons.restaurant_outlined,
+        AppColors.primary,
         () => context.push(RoutePaths.alimentacion),
       ),
       _MenuItem(
         'Inventario Foto',
-        Icons.camera_alt,
-        Colors.purple,
+        Icons.camera_alt_outlined,
+        AppColors.accentLime,
         () => context.push(RoutePaths.inventarioFoto),
       ),
       _MenuItem(
         'Reportes',
-        Icons.assessment,
-        Colors.teal,
+        Icons.assessment_outlined,
+        AppColors.secondaryDark,
         () => context.push(RoutePaths.reportes),
       ),
       _MenuItem(
         'Dashboard',
-        Icons.dashboard,
-        Colors.indigo,
+        Icons.dashboard_outlined,
+        AppColors.primaryLight,
         () => context.push(RoutePaths.dashboard),
       ),
     ];
@@ -223,28 +249,47 @@ class HomePage extends ConsumerWidget {
   Widget _buildMenuItem(_MenuItem item) {
     return InkWell(
       onTap: item.onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(16),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: item.color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              gradient: LinearGradient(
+                colors: [
+                  item.color.withOpacity(0.08),
+                  item.color.withOpacity(0.15),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: item.color.withOpacity(0.25),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: item.color.withOpacity(0.15),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Icon(
               item.icon,
               color: item.color,
-              size: 28,
+              size: 26,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             item.label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w500,
+              color: Colors.grey[700],
             ),
             textAlign: TextAlign.center,
             maxLines: 2,

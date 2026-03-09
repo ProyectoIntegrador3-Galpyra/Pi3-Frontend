@@ -144,3 +144,17 @@ Estas ramas son temporales y se crean según la necesidad, con un enfoque estric
     ```
 
 ---
+Inicialzar el prpgrama 
+# Navegar al proyecto
+cd "C:\Users\crist\OneDrive\Documents\P.I3\Pi3-Frontend\poultry_trace_app"
+
+# Iniciar emulador
+flutter emulators --launch Medium_Phone_API_36.1
+
+# Esperar a que inicie
+Start-Sleep -Seconds 20
+
+# Ejecutar app
+flutter run
+
+.\run.ps1

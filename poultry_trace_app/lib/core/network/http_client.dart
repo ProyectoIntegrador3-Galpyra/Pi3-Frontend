@@ -23,7 +23,7 @@ class HttpClient {
     );
 
     _dio.interceptors.addAll([
-      AuthInterceptor(_secureStorage),
+      AuthInterceptor(_secureStorage, _dio),
       LoggingInterceptor(),
     ]);
   }

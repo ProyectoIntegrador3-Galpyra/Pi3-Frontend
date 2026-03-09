@@ -1,4 +1,5 @@
 import '../../../../core/network/http_client.dart';
+// ignore: unused_import
 import '../../../../config/constants/api_endpoints.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../models/galpon_model.dart';
@@ -14,6 +15,7 @@ abstract class GalponRemoteDataSource {
 
 /// Galpon remote data source implementation
 class GalponRemoteDataSourceImpl implements GalponRemoteDataSource {
+  // ignore: unused_field
   final HttpClient _httpClient;
 
   GalponRemoteDataSourceImpl(this._httpClient);
@@ -28,6 +30,7 @@ class GalponRemoteDataSourceImpl implements GalponRemoteDataSource {
       //     .toList();
 
       // Mock response for development
+      final now = DateTime.now();
       await Future.delayed(const Duration(milliseconds: 500));
       return [
         GalponModel(
@@ -38,7 +41,9 @@ class GalponRemoteDataSourceImpl implements GalponRemoteDataSource {
           cantidadActual: 4500,
           ubicacion: 'Sector Norte',
           activo: true,
-          createdAt: DateTime.now().subtract(const Duration(days: 365)),
+          sincronizado: true,
+          createdAt: now.subtract(const Duration(days: 365)),
+          updatedAt: now.subtract(const Duration(days: 1)),
         ),
         GalponModel(
           id: '2',
@@ -48,7 +53,9 @@ class GalponRemoteDataSourceImpl implements GalponRemoteDataSource {
           cantidadActual: 2800,
           ubicacion: 'Sector Sur',
           activo: true,
-          createdAt: DateTime.now().subtract(const Duration(days: 180)),
+          sincronizado: true,
+          createdAt: now.subtract(const Duration(days: 180)),
+          updatedAt: now.subtract(const Duration(days: 7)),
         ),
         GalponModel(
           id: '3',
@@ -58,7 +65,9 @@ class GalponRemoteDataSourceImpl implements GalponRemoteDataSource {
           cantidadActual: 1500,
           ubicacion: 'Sector Este',
           activo: true,
-          createdAt: DateTime.now().subtract(const Duration(days: 90)),
+          sincronizado: true,
+          createdAt: now.subtract(const Duration(days: 90)),
+          updatedAt: now.subtract(const Duration(days: 3)),
         ),
       ];
     } catch (e) {
@@ -76,6 +85,7 @@ class GalponRemoteDataSourceImpl implements GalponRemoteDataSource {
       // final response = await _httpClient.get(ApiEndpoints.galponById(id));
       // return GalponModel.fromJson(response.data);
 
+      final now = DateTime.now();
       await Future.delayed(const Duration(milliseconds: 300));
       return GalponModel(
         id: id,
@@ -85,7 +95,9 @@ class GalponRemoteDataSourceImpl implements GalponRemoteDataSource {
         cantidadActual: 4500,
         ubicacion: 'Sector Norte',
         activo: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 365)),
+        sincronizado: true,
+        createdAt: now.subtract(const Duration(days: 365)),
+        updatedAt: now,
       );
     } catch (e) {
       throw ServerException(

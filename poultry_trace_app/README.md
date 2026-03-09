@@ -172,7 +172,7 @@ features/[nombre_feature]/
 
 ---
 
-## 🛠 Tecnologías Utilizadas
+## Tecnologías Utilizadas
 
 ### Dependencias Principales
 
@@ -212,7 +212,7 @@ features/[nombre_feature]/
 
 ---
 
-## 🔄 Flujo de la Aplicación
+## Flujo de la Aplicación
 
 ### 1. Inicialización (`main.dart` → `bootstrap.dart`)
 
