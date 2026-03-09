@@ -3,7 +3,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/network/http_client.dart';
 import '../../core/storage/secure_storage.dart';
-import '../../core/storage/local_db.dart';
 import '../../core/services/camera_service.dart';
 import '../../core/services/image_processing_service.dart';
 import '../../core/services/sync_service.dart';
@@ -88,7 +87,6 @@ Future<void> setupInjector() async {
 
   // Core - Services
   getIt.registerLazySingleton(() => SecureStorage());
-  getIt.registerLazySingleton(() => LocalDb());
   getIt.registerLazySingleton(() => HttpClient(getIt()));
   getIt.registerLazySingleton(() => ConnectivityService());
   getIt.registerLazySingleton(() => CameraService());
@@ -102,7 +100,7 @@ Future<void> setupInjector() async {
     () => AuthRemoteDataSourceImpl(getIt()),
   );
   getIt.registerLazySingleton<AuthLocalDataSource>(
-    () => AuthLocalDataSourceImpl(getIt(), getIt()),
+    () => AuthLocalDataSourceImpl(getIt()),
   );
 
   // Repository
@@ -121,7 +119,7 @@ Future<void> setupInjector() async {
     () => GalponRemoteDataSourceImpl(getIt()),
   );
   getIt.registerLazySingleton<GalponLocalDataSource>(
-    () => GalponLocalDataSourceImpl(getIt()),
+    () => GalponLocalDataSourceImpl(),
   );
 
   // Repository

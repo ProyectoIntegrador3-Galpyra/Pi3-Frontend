@@ -66,10 +66,14 @@ class AppButton extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
             foregroundColor: AppColors.textOnPrimary,
-            padding: padding ?? const EdgeInsets.symmetric(horizontal: 24),
+            padding: padding ?? const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            elevation: 0,
+            shadowColor: Colors.transparent,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(borderRadius),
             ),
+          ).copyWith(
+            overlayColor: WidgetStateProperty.all(Colors.white.withOpacity(0.1)),
           ),
           child: buttonChild,
         );
@@ -78,12 +82,16 @@ class AppButton extends StatelessWidget {
         return ElevatedButton(
           onPressed: effectiveOnPressed,
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.secondary,
-            foregroundColor: AppColors.textOnSecondary,
-            padding: padding ?? const EdgeInsets.symmetric(horizontal: 24),
+            backgroundColor: AppColors.surfaceVariant,
+            foregroundColor: AppColors.textPrimary,
+            padding: padding ?? const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            elevation: 0,
+            shadowColor: Colors.transparent,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(borderRadius),
             ),
+          ).copyWith(
+            overlayColor: WidgetStateProperty.all(AppColors.primary.withOpacity(0.08)),
           ),
           child: buttonChild,
         );
@@ -93,8 +101,8 @@ class AppButton extends StatelessWidget {
           onPressed: effectiveOnPressed,
           style: OutlinedButton.styleFrom(
             foregroundColor: AppColors.primary,
-            side: const BorderSide(color: AppColors.primary),
-            padding: padding ?? const EdgeInsets.symmetric(horizontal: 24),
+            side: const BorderSide(color: AppColors.border, width: 1.5),
+            padding: padding ?? const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(borderRadius),
             ),
@@ -116,12 +124,16 @@ class AppButton extends StatelessWidget {
         return ElevatedButton(
           onPressed: effectiveOnPressed,
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.error,
+            backgroundColor: const Color(0xFFDC2626),
             foregroundColor: AppColors.textOnPrimary,
-            padding: padding ?? const EdgeInsets.symmetric(horizontal: 24),
+            padding: padding ?? const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            elevation: 0,
+            shadowColor: Colors.transparent,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(borderRadius),
             ),
+          ).copyWith(
+            overlayColor: WidgetStateProperty.all(Colors.white.withOpacity(0.1)),
           ),
           child: buttonChild,
         );

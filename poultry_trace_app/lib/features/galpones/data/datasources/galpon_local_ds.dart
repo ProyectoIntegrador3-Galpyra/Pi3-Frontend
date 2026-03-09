@@ -14,15 +14,14 @@ abstract class GalponLocalDataSource {
 
 /// Galpon local data source implementation
 class GalponLocalDataSourceImpl implements GalponLocalDataSource {
-  final LocalDb _localDb;
   static const String _galponesKey = 'cached_galpones';
 
-  GalponLocalDataSourceImpl(this._localDb);
+  GalponLocalDataSourceImpl();
 
   @override
   Future<List<GalponModel>> getCachedGalpones() async {
     try {
-      final data = await _localDb.getCachedData(_galponesKey);
+      final data = await LocalDb.getCachedData(_galponesKey);
       if (data != null) {
         final List<dynamic> jsonList = data is String ? jsonDecode(data) : data;
         return jsonList
@@ -42,11 +41,7 @@ class GalponLocalDataSourceImpl implements GalponLocalDataSource {
   Future<void> cacheGalpones(List<GalponModel> galpones) async {
     try {
       final jsonList = galpones.map((g) => g.toJson()).toList();
-      await _localDb.cacheData(
-        _galponesKey,
-        jsonList,
-        expiration: const Duration(hours: 1),
-      );
+      await LocalDb.cacheData(_galponesKey, jsonList, ttlHours: 1);
     } catch (e) {
       throw CacheException(
         message: 'Error al guardar galpones en cache',
@@ -84,7 +79,7 @@ class GalponLocalDataSourceImpl implements GalponLocalDataSource {
   @override
   Future<void> clearCache() async {
     try {
-      await _localDb.clearCache(_galponesKey);
+      await LocalDb.clearCache(_galponesKey);
     } catch (e) {
       // Ignore cache errors
     }

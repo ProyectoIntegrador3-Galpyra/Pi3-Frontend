@@ -9,8 +9,11 @@ class Galpon extends Equatable {
   final int cantidadActual;
   final String? ubicacion;
   final bool activo;
+  // Campos de control offline
+  final bool sincronizado;
   final DateTime createdAt;
-  final DateTime? updatedAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
 
   const Galpon({
     required this.id,
@@ -20,8 +23,10 @@ class Galpon extends Equatable {
     this.cantidadActual = 0,
     this.ubicacion,
     this.activo = true,
+    this.sincronizado = false,
     required this.createdAt,
-    this.updatedAt,
+    required this.updatedAt,
+    this.deletedAt,
   });
 
   double get porcentajeOcupacion {
@@ -30,6 +35,8 @@ class Galpon extends Equatable {
   }
 
   bool get estaLleno => cantidadActual >= capacidadMaxima;
+  
+  bool get isPendingSync => !sincronizado;
 
   @override
   List<Object?> get props => [
@@ -40,8 +47,10 @@ class Galpon extends Equatable {
         cantidadActual,
         ubicacion,
         activo,
+        sincronizado,
         createdAt,
         updatedAt,
+        deletedAt,
       ];
 
   Galpon copyWith({
@@ -52,8 +61,10 @@ class Galpon extends Equatable {
     int? cantidadActual,
     String? ubicacion,
     bool? activo,
+    bool? sincronizado,
     DateTime? createdAt,
     DateTime? updatedAt,
+    DateTime? deletedAt,
   }) {
     return Galpon(
       id: id ?? this.id,
@@ -63,8 +74,41 @@ class Galpon extends Equatable {
       cantidadActual: cantidadActual ?? this.cantidadActual,
       ubicacion: ubicacion ?? this.ubicacion,
       activo: activo ?? this.activo,
+      sincronizado: sincronizado ?? this.sincronizado,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'nombre': nombre,
+      'descripcion': descripcion,
+      'capacidad_maxima': capacidadMaxima,
+      'cantidad_actual': cantidadActual,
+      'ubicacion': ubicacion,
+      'activo': activo,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
+      'deleted_at': deletedAt?.toIso8601String(),
+    };
+  }
+
+  factory Galpon.fromJson(Map<String, dynamic> json) {
+    return Galpon(
+      id: json['id'],
+      nombre: json['nombre'],
+      descripcion: json['descripcion'],
+      capacidadMaxima: json['capacidad_maxima'],
+      cantidadActual: json['cantidad_actual'] ?? 0,
+      ubicacion: json['ubicacion'],
+      activo: json['activo'] ?? true,
+      sincronizado: true, // Si viene del servidor está sincronizado
+      createdAt: DateTime.parse(json['created_at']),
+      updatedAt: DateTime.parse(json['updated_at']),
+      deletedAt: json['deleted_at'] != null ? DateTime.parse(json['deleted_at']) : null,
     );
   }
 }

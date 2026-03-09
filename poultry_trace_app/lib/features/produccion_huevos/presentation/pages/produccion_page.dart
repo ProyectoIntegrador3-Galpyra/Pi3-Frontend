@@ -6,7 +6,7 @@ import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../core/widgets/loading.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/empty_state.dart';
-import '../../../../core/utils/date_utils.dart';
+import '../../../../core/widgets/gradient_fab.dart';
 import '../controllers/produccion_huevos_controller.dart';
 import '../widgets/produccion_card.dart';
 
@@ -43,10 +43,10 @@ class _ProduccionPageState extends ConsumerState<ProduccionPage> {
           },
         ),
       ],
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: GradientFAB(
         onPressed: () => context.push(RoutePaths.produccionFormPath(widget.galponId)),
-        icon: const Icon(Icons.add),
-        label: const Text('Registrar'),
+        icon: Icons.add,
+        label: 'Registrar',
       ),
       body: _buildBody(state),
     );

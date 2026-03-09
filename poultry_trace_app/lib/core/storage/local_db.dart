@@ -1,130 +1,189 @@
-import 'package:hive_flutter/hive_flutter.dart';
+import 'dart:convert';
+import 'database/app_database.dart';
+import 'database/daos/galpones_dao.dart';
+import 'database/daos/produccion_dao.dart';
+import 'database/daos/sanidad_dao.dart';
+import 'database/daos/sync_queue_dao.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-/// Local database service using Hive
+/// Local database service using Drift/SQLite
 class LocalDb {
-  static const String _settingsBox = 'settings';
-  static const String _cacheBox = 'cache';
-  static const String _syncQueueBox = 'sync_queue';
+  static AppDatabase? _database;
+  static SharedPreferences? _prefs;
+  
+  // DAOs
+  static GalponesDao? _galponesDao;
+  static ProduccionDao? _produccionDao;
+  static SanidadDao? _sanidadDao;
+  static SyncQueueDao? _syncQueueDao;
 
-  static late Box _settings;
-  static late Box _cache;
-  static late Box _syncQueue;
+  // Cache duration in hours
+  static const int _cacheDurationHours = 24;
 
-  /// Initialize all Hive boxes
+  /// Initialize database
   static Future<void> init() async {
-    _settings = await Hive.openBox(_settingsBox);
-    _cache = await Hive.openBox(_cacheBox);
-    _syncQueue = await Hive.openBox(_syncQueueBox);
+    _database = AppDatabase();
+    _prefs = await SharedPreferences.getInstance();
+    _galponesDao = GalponesDao(_database!);
+    _produccionDao = ProduccionDao(_database!);
+    _sanidadDao = SanidadDao(_database!);
+    _syncQueueDao = SyncQueueDao(_database!);
   }
 
-  // ========== Settings Operations ==========
-
-  /// Get a setting value
-  Future<T?> getSetting<T>(String key, {T? defaultValue}) async {
-    return _settings.get(key, defaultValue: defaultValue);
+  /// Get database instance
+  static AppDatabase get database {
+    if (_database == null) {
+      throw Exception('Database not initialized. Call LocalDb.init() first.');
+    }
+    return _database!;
   }
 
-  /// Set a setting value
-  Future<void> setSetting<T>(String key, T value) async {
-    await _settings.put(key, value);
+  /// Get Galpones DAO
+  static GalponesDao get galponesDao {
+    if (_galponesDao == null) {
+      throw Exception('Database not initialized. Call LocalDb.init() first.');
+    }
+    return _galponesDao!;
   }
 
-  /// Remove a setting
-  Future<void> removeSetting(String key) async {
-    await _settings.delete(key);
+  /// Get Produccion DAO
+  static ProduccionDao get produccionDao {
+    if (_produccionDao == null) {
+      throw Exception('Database not initialized. Call LocalDb.init() first.');
+    }
+    return _produccionDao!;
   }
 
-  // ========== Cache Operations ==========
+  /// Get Sanidad DAO
+  static SanidadDao get sanidadDao {
+    if (_sanidadDao == null) {
+      throw Exception('Database not initialized. Call LocalDb.init() first.');
+    }
+    return _sanidadDao!;
+  }
 
-  /// Cache data with optional expiration
-  Future<void> cacheData(
-    String key,
-    dynamic data, {
-    Duration? expiration,
-  }) async {
+  /// Get SyncQueue DAO
+  static SyncQueueDao get syncQueueDao {
+    if (_syncQueueDao == null) {
+      throw Exception('Database not initialized. Call LocalDb.init() first.');
+    }
+    return _syncQueueDao!;
+  }
+
+  // ========== CACHE METHODS ==========
+  
+  /// Cache data with optional TTL
+  static Future<void> cacheData(String key, dynamic data, {int? ttlHours}) async {
+    _ensurePrefs();
     final cacheEntry = {
       'data': data,
-      'cachedAt': DateTime.now().toIso8601String(),
-      'expiresAt': expiration != null
-          ? DateTime.now().add(expiration).toIso8601String()
-          : null,
+      'cached_at': DateTime.now().toIso8601String(),
+      'ttl_hours': ttlHours ?? _cacheDurationHours,
     };
-    await _cache.put(key, cacheEntry);
+    await _prefs!.setString('cache_$key', jsonEncode(cacheEntry));
   }
-
+  
   /// Get cached data
-  Future<dynamic> getCachedData(String key) async {
-    final entry = _cache.get(key);
-    if (entry == null) return null;
-
-    final expiresAt = entry['expiresAt'];
-    if (expiresAt != null) {
-      final expiration = DateTime.parse(expiresAt);
-      if (DateTime.now().isAfter(expiration)) {
-        await _cache.delete(key);
-        return null;
-      }
+  static Future<dynamic> getCachedData(String key) async {
+    _ensurePrefs();
+    final cached = _prefs!.getString('cache_$key');
+    if (cached == null) return null;
+    
+    try {
+      final entry = jsonDecode(cached) as Map<String, dynamic>;
+      return entry['data'];
+    } catch (e) {
+      return null;
     }
-
-    return entry['data'];
   }
-
-  /// Check if cache exists and is valid
-  Future<bool> isCacheValid(String key) async {
-    final data = await getCachedData(key);
-    return data != null;
+  
+  /// Check if cache is still valid
+  static Future<bool> isCacheValid(String key) async {
+    _ensurePrefs();
+    final cached = _prefs!.getString('cache_$key');
+    if (cached == null) return false;
+    
+    try {
+      final entry = jsonDecode(cached) as Map<String, dynamic>;
+      final cachedAt = DateTime.parse(entry['cached_at'] as String);
+      final ttlHours = entry['ttl_hours'] as int? ?? _cacheDurationHours;
+      final expiresAt = cachedAt.add(Duration(hours: ttlHours));
+      return DateTime.now().isBefore(expiresAt);
+    } catch (e) {
+      return false;
+    }
   }
-
+  
   /// Clear specific cache
-  Future<void> clearCache(String key) async {
-    await _cache.delete(key);
+  static Future<void> clearCache(String key) async {
+    _ensurePrefs();
+    await _prefs!.remove('cache_$key');
   }
-
+  
   /// Clear all cache
-  Future<void> clearAllCache() async {
-    await _cache.clear();
+  static Future<void> clearAllCache() async {
+    _ensurePrefs();
+    final keys = _prefs!.getKeys().where((k) => k.startsWith('cache_')).toList();
+    for (final key in keys) {
+      await _prefs!.remove(key);
+    }
   }
 
-  // ========== Sync Queue Operations ==========
-
-  /// Add item to sync queue
-  Future<void> addToSyncQueue(String id, Map<String, dynamic> data) async {
-    await _syncQueue.put(id, data);
+  // ========== SETTINGS METHODS ==========
+  
+  /// Set setting value
+  static Future<void> setSetting<T>(String key, T value) async {
+    _ensurePrefs();
+    if (value is String) {
+      await _prefs!.setString('setting_$key', value);
+    } else if (value is int) {
+      await _prefs!.setInt('setting_$key', value);
+    } else if (value is double) {
+      await _prefs!.setDouble('setting_$key', value);
+    } else if (value is bool) {
+      await _prefs!.setBool('setting_$key', value);
+    } else {
+      await _prefs!.setString('setting_$key', jsonEncode(value));
+    }
+  }
+  
+  /// Get setting value
+  static Future<T?> getSetting<T>(String key) async {
+    _ensurePrefs();
+    final value = _prefs!.get('setting_$key');
+    if (value == null) return null;
+    
+    if (T == String && value is String) {
+      return value as T;
+    }
+    return value as T?;
+  }
+  
+  /// Remove setting
+  static Future<void> removeSetting(String key) async {
+    _ensurePrefs();
+    await _prefs!.remove('setting_$key');
   }
 
-  /// Get all items in sync queue
-  Future<List<Map<String, dynamic>>> getSyncQueue() async {
-    return _syncQueue.values.cast<Map<String, dynamic>>().toList();
+  // ========== UTILITY ==========
+  
+  static void _ensurePrefs() {
+    if (_prefs == null) {
+      throw Exception('Database not initialized. Call LocalDb.init() first.');
+    }
   }
 
-  /// Remove item from sync queue
-  Future<void> removeFromSyncQueue(String id) async {
-    await _syncQueue.delete(id);
+  /// Close database
+  static Future<void> close() async {
+    await _database?.close();
+    _database = null;
+    _galponesDao = null;
+    _produccionDao = null;
+    _sanidadDao = null;
+    _syncQueueDao = null;
+    _prefs = null;
   }
 
-  /// Clear sync queue
-  Future<void> clearSyncQueue() async {
-    await _syncQueue.clear();
-  }
-
-  /// Get sync queue count
-  int getSyncQueueCount() {
-    return _syncQueue.length;
-  }
-
-  // ========== Box Management ==========
-
-  /// Close all boxes
-  Future<void> closeAll() async {
-    await _settings.close();
-    await _cache.close();
-    await _syncQueue.close();
-  }
-
-  /// Clear all data
-  Future<void> clearAll() async {
-    await _settings.clear();
-    await _cache.clear();
-    await _syncQueue.clear();
-  }
+  /// Check if database is initialized
+  static bool get isInitialized => _database != null && _prefs != null;
 }

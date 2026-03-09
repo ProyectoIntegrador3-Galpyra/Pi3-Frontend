@@ -1,23 +1,28 @@
 import 'package:flutter/material.dart';
 
-/// App color palette
+/// App color palette - Professional & Modern (Green & Yellow Theme)
 class AppColors {
   AppColors._();
 
-  // Primary colors
+  // Primary colors - Vibrant green
   static const Color primary = Color(0xFF2E7D32);
   static const Color primaryLight = Color(0xFF60AD5E);
   static const Color primaryDark = Color(0xFF005005);
 
-  // Secondary colors
-  static const Color secondary = Color(0xFFFF8F00);
-  static const Color secondaryLight = Color(0xFFFFC046);
-  static const Color secondaryDark = Color(0xFFC56000);
+  // Secondary colors - Warm golden yellow
+  static const Color secondary = Color(0xFFFFC107);
+  static const Color secondaryLight = Color(0xFFFFD54F);
+  static const Color secondaryDark = Color(0xFFFFA000);
+
+  // Accent gradient colors
+  static const Color accentGreen = Color(0xFF43A047);
+  static const Color accentYellow = Color(0xFFFFEB3B);
+  static const Color accentLime = Color(0xFFCDDC39);
 
   // Neutral colors
-  static const Color background = Color(0xFFF5F5F5);
+  static const Color background = Color(0xFFFAFAFA);
   static const Color surface = Color(0xFFFFFFFF);
-  static const Color surfaceVariant = Color(0xFFF0F0F0);
+  static const Color surfaceVariant = Color(0xFFF5F5F0);
 
   // Text colors
   static const Color textPrimary = Color(0xFF212121);
@@ -32,12 +37,14 @@ class AppColors {
   static const Color error = Color(0xFFF44336);
   static const Color info = Color(0xFF2196F3);
 
-  // Chart colors
+  // Chart colors (using green-yellow palette)
   static const Color chartBlue = Color(0xFF42A5F5);
-  static const Color chartGreen = Color(0xFF66BB6A);
-  static const Color chartOrange = Color(0xFFFFCA28);
+  static const Color chartGreen = Color(0xFF4CAF50);
+  static const Color chartOrange = Color(0xFFFFB300);
   static const Color chartRed = Color(0xFFEF5350);
   static const Color chartPurple = Color(0xFFAB47BC);
+  static const Color chartYellow = Color(0xFFFFEB3B);
+  static const Color chartLime = Color(0xFF8BC34A);
 
   // Dark theme colors
   static const Color darkBackground = Color(0xFF121212);

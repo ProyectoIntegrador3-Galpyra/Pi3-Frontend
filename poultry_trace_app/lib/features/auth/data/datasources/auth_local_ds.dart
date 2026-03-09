@@ -19,9 +19,8 @@ abstract class AuthLocalDataSource {
 /// Auth local data source implementation
 class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   final SecureStorage _secureStorage;
-  final LocalDb _localDb;
 
-  AuthLocalDataSourceImpl(this._secureStorage, this._localDb);
+  AuthLocalDataSourceImpl(this._secureStorage);
 
   @override
   Future<void> cacheToken(String token) async {
@@ -51,7 +50,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   Future<void> cacheUser(UserModel user) async {
     try {
       final userJson = jsonEncode(user.toJson());
-      await _localDb.setSetting(AppConstants.userKey, userJson);
+      await LocalDb.setSetting(AppConstants.userKey, userJson);
     } catch (e) {
       throw CacheException(
         message: 'Error al guardar usuario',
@@ -81,7 +80,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   @override
   Future<UserModel?> getCachedUser() async {
     try {
-      final userJson = await _localDb.getSetting<String>(AppConstants.userKey);
+      final userJson = await LocalDb.getSetting<String>(AppConstants.userKey);
       if (userJson != null) {
         final userMap = jsonDecode(userJson) as Map<String, dynamic>;
         return UserModel.fromJson(userMap);
@@ -97,7 +96,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
     try {
       await _secureStorage.delete(AppConstants.tokenKey);
       await _secureStorage.delete(AppConstants.refreshTokenKey);
-      await _localDb.removeSetting(AppConstants.userKey);
+      await LocalDb.removeSetting(AppConstants.userKey);
     } catch (e) {
       throw CacheException(
         message: 'Error al limpiar datos de autenticación',

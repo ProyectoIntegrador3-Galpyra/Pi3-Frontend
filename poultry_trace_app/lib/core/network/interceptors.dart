@@ -1,13 +1,16 @@
 import 'package:dio/dio.dart';
 import '../../config/env.dart';
 import '../../config/constants/app_constants.dart';
+import '../../config/constants/api_endpoints.dart';
 import '../storage/secure_storage.dart';
 
-/// Auth interceptor to add token to requests
+/// Auth interceptor to add token to requests and handle token refresh
 class AuthInterceptor extends Interceptor {
   final SecureStorage _secureStorage;
+  final Dio _dio;
+  bool _isRefreshing = false;
 
-  AuthInterceptor(this._secureStorage);
+  AuthInterceptor(this._secureStorage, this._dio);
 
   @override
   void onRequest(
@@ -25,25 +28,78 @@ class AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    if (err.response?.statusCode == 401) {
-      // TODO: Implement token refresh logic
-      // final refreshToken = await _secureStorage.read(AppConstants.refreshTokenKey);
-      // if (refreshToken != null) {
-      //   try {
-      //     final newToken = await _refreshToken(refreshToken);
-      //     await _secureStorage.write(AppConstants.tokenKey, newToken);
-      //     // Retry the original request
-      //     final opts = err.requestOptions;
-      //     opts.headers['Authorization'] = 'Bearer $newToken';
-      //     final response = await Dio().fetch(opts);
-      //     return handler.resolve(response);
-      //   } catch (e) {
-      //     // Refresh failed, logout user
-      //     await _secureStorage.deleteAll();
-      //   }
-      // }
+    if (err.response?.statusCode == 401 && !_isRefreshing) {
+      _isRefreshing = true;
+      
+      try {
+        final refreshToken = await _secureStorage.read(AppConstants.refreshTokenKey);
+        
+        if (refreshToken != null && refreshToken.isNotEmpty) {
+          // Intentar refrescar el token
+          final newTokens = await _refreshToken(refreshToken);
+          
+          if (newTokens != null) {
+            // Guardar nuevos tokens
+            await _secureStorage.write(AppConstants.tokenKey, newTokens['access_token']);
+            if (newTokens['refresh_token'] != null) {
+              await _secureStorage.write(AppConstants.refreshTokenKey, newTokens['refresh_token']);
+            }
+            
+            // Reintentar la petición original con el nuevo token
+            final opts = err.requestOptions;
+            opts.headers['Authorization'] = 'Bearer ${newTokens['access_token']}';
+            
+            _isRefreshing = false;
+            
+            final response = await _dio.fetch(opts);
+            return handler.resolve(response);
+          }
+        }
+        
+        // Si no hay refresh token o falló, limpiar sesión
+        await _clearSession();
+        
+      } catch (e) {
+        // Error al refrescar, limpiar sesión
+        await _clearSession();
+      } finally {
+        _isRefreshing = false;
+      }
     }
+    
     handler.next(err);
+  }
+
+  /// Refresca el access token usando el refresh token
+  Future<Map<String, dynamic>?> _refreshToken(String refreshToken) async {
+    try {
+      // Crear un Dio separado sin interceptores para evitar loops
+      final refreshDio = Dio(BaseOptions(
+        baseUrl: _dio.options.baseUrl,
+        connectTimeout: _dio.options.connectTimeout,
+        receiveTimeout: _dio.options.receiveTimeout,
+      ));
+      
+      final response = await refreshDio.post(
+        ApiEndpoints.refreshToken,
+        data: {'refresh_token': refreshToken},
+      );
+      
+      if (response.statusCode == 200 && response.data != null) {
+        return response.data as Map<String, dynamic>;
+      }
+      
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Limpia la sesión del usuario
+  Future<void> _clearSession() async {
+    await _secureStorage.delete(AppConstants.tokenKey);
+    await _secureStorage.delete(AppConstants.refreshTokenKey);
+    await _secureStorage.delete(AppConstants.userKey);
   }
 }
 

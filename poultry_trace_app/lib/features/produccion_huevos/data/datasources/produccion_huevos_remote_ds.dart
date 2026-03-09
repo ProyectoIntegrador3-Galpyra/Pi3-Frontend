@@ -63,7 +63,9 @@ class ProduccionHuevosRemoteDataSourceImpl implements ProduccionHuevosRemoteData
         huevosPequeno: 400 + (index * 5),
         porcentajePostura: 84.0 + (index * 0.5),
         observaciones: index == 0 ? 'Producción normal' : null,
+        sincronizado: true,
         createdAt: fecha,
+        updatedAt: fecha,
       );
     });
   }
@@ -87,9 +89,10 @@ class ProduccionHuevosRemoteDataSourceImpl implements ProduccionHuevosRemoteData
     // Calculate postura percentage (mock)
     const totalAves = 5000;
     final porcentajePostura = (cantidadTotal / totalAves) * 100;
+    final now = DateTime.now();
     
     return ProduccionHuevosModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: now.millisecondsSinceEpoch.toString(),
       galponId: galponId,
       fecha: fecha,
       cantidadTotal: cantidadTotal,
@@ -101,7 +104,9 @@ class ProduccionHuevosRemoteDataSourceImpl implements ProduccionHuevosRemoteData
       huevosPequeno: huevosPequeno,
       porcentajePostura: porcentajePostura,
       observaciones: observaciones,
-      createdAt: DateTime.now(),
+      sincronizado: true,
+      createdAt: now,
+      updatedAt: now,
     );
   }
 
@@ -143,7 +148,9 @@ class ProduccionHuevosRemoteDataSourceImpl implements ProduccionHuevosRemoteData
       huevosPequeno: 360,
       porcentajePostura: 85.0,
       observaciones: 'Producción del día',
+      sincronizado: true,
       createdAt: now,
+      updatedAt: now,
     );
   }
 }
