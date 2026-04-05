@@ -32,14 +32,6 @@ class GalponRemoteDataSourceImpl implements GalponRemoteDataSource {
             .toList();
       }
 
-      final data = ApiResponseParser.extractDataMap(response.data);
-      final fallbackList = data['items'] ?? data['galpones'] ?? data['lista'];
-      if (fallbackList is List) {
-        return fallbackList
-            .map((item) => GalponModel.fromJson(ApiResponseParser.asMap(item)))
-            .toList();
-      }
-
       return <GalponModel>[];
     } on DioException catch (e) {
       throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al obtener galpones');

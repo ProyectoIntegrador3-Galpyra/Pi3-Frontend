@@ -64,14 +64,6 @@ class ProduccionHuevosRemoteDataSourceImpl implements ProduccionHuevosRemoteData
             .toList();
       }
 
-      final data = ApiResponseParser.extractDataMap(response.data);
-      final fallbackList = data['items'] ?? data['registros'] ?? data['producciones'];
-      if (fallbackList is List) {
-        return fallbackList
-            .map((item) => ProduccionHuevosModel.fromJson(ApiResponseParser.asMap(item)))
-            .toList();
-      }
-
       return <ProduccionHuevosModel>[];
     } on DioException catch (e) {
       throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al obtener historial de produccion');

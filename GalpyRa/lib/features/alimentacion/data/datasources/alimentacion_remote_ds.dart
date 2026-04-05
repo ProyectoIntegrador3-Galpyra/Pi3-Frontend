@@ -65,14 +65,6 @@ class AlimentacionRemoteDataSourceImpl implements AlimentacionRemoteDataSource {
             .toList();
       }
 
-      final data = ApiResponseParser.extractDataMap(response.data);
-      final fallbackList = data['items'] ?? data['registros'] ?? data['historial'];
-      if (fallbackList is List) {
-        return fallbackList
-            .map((item) => RegistroAlimentacionModel.fromJson(ApiResponseParser.asMap(item)))
-            .toList();
-      }
-
       return <RegistroAlimentacionModel>[];
     } on DioException catch (e) {
       throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al obtener historial de alimentacion');

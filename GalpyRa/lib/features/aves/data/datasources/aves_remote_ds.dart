@@ -48,14 +48,6 @@ class AvesRemoteDataSourceImpl implements AvesRemoteDataSource {
             .toList();
       }
 
-      final data = ApiResponseParser.extractDataMap(response.data);
-      final fallbackList = data['items'] ?? data['lotes'] ?? data['inventario'];
-      if (fallbackList is List) {
-        return fallbackList
-            .map((item) => LoteAvesModel.fromJson(ApiResponseParser.asMap(item)))
-            .toList();
-      }
-
       return <LoteAvesModel>[];
     } on DioException catch (e) {
       throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al consultar inventario');

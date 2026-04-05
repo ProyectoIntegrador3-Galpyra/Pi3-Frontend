@@ -25,7 +25,7 @@ class ProduccionHuevosRepositoryImpl implements ProduccionHuevosRepository {
       );
       return Right(registros.map((e) => e.toEntity()).toList());
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message));
     } catch (e) {
@@ -61,7 +61,7 @@ class ProduccionHuevosRepositoryImpl implements ProduccionHuevosRepository {
       );
       return Right(registro.toEntity());
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message));
     } catch (e) {
@@ -83,7 +83,7 @@ class ProduccionHuevosRepositoryImpl implements ProduccionHuevosRepository {
       );
       return Right(stats);
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message));
     } catch (e) {
@@ -97,7 +97,7 @@ class ProduccionHuevosRepositoryImpl implements ProduccionHuevosRepository {
       final registro = await _remoteDataSource.obtenerProduccionHoy(galponId);
       return Right(registro?.toEntity());
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message));
     } catch (e) {

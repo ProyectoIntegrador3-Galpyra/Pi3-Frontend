@@ -28,7 +28,7 @@ class GalponRepositoryImpl implements GalponRepository {
           return Right(cached);
         }
       } catch (_) {}
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } catch (e) {
       return const Left(UnknownFailure());
     }
@@ -45,7 +45,7 @@ class GalponRepositoryImpl implements GalponRepository {
       if (cached != null) {
         return Right(cached);
       }
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } catch (e) {
       return const Left(UnknownFailure());
     }
@@ -59,7 +59,7 @@ class GalponRepositoryImpl implements GalponRepository {
       await _localDataSource.cacheGalpon(result);
       return Right(result);
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } catch (e) {
       return const Left(UnknownFailure());
     }
@@ -73,7 +73,7 @@ class GalponRepositoryImpl implements GalponRepository {
       await _localDataSource.cacheGalpon(result);
       return Right(result);
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } catch (e) {
       return const Left(UnknownFailure());
     }
@@ -86,7 +86,7 @@ class GalponRepositoryImpl implements GalponRepository {
       await _localDataSource.clearCache();
       return const Right(null);
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } catch (e) {
       return const Left(UnknownFailure());
     }

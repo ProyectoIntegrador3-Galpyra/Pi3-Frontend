@@ -1,0 +1,1 @@
+ C:\\Users\\crist\\OneDrive\\Documents\\P.I3\ fronted\\Pi3-Frontend\\GalpyRa\\.dart_tool\\flutter_build\\338f470c587a8379da95919ffab15d50\\native_assets.json: 

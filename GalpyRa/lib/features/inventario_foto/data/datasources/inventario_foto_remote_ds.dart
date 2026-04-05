@@ -96,17 +96,6 @@ class InventarioFotoRemoteDataSourceImpl implements InventarioFotoRemoteDataSour
       final data = ApiResponseParser.extractDataMap(response.data);
       return _mapJobToConteo(data);
     } on DioException catch (e) {
-      // Fallback for backends still wired to field "file".
-      if (e.response?.statusCode == 422 || e.response?.statusCode == 400) {
-        final fallbackResponse = await _httpClient.uploadFile(
-          ApiEndpoints.inventarioProcesar,
-          filePath: imagePath,
-          fieldName: 'file',
-          extraData: {'galpon_id': galponId},
-        );
-        final data = ApiResponseParser.extractDataMap(fallbackResponse.data);
-        return _mapJobToConteo(data);
-      }
       throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al procesar imagen');
     } catch (e) {
       if (e is ServerException) rethrow;

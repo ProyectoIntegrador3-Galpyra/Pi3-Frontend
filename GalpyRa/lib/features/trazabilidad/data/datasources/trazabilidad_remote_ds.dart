@@ -24,8 +24,7 @@ class TrazabilidadRemoteDataSourceImpl implements TrazabilidadRemoteDataSource {
       );
 
       final data = ApiResponseParser.extractDataMap(response.data);
-      final token =
-          (data['token'] ?? data['trazabilidad_token'] ?? '').toString();
+        final token = (data['token'] ?? '').toString();
 
       if (token.isEmpty) {
         throw const ServerException(

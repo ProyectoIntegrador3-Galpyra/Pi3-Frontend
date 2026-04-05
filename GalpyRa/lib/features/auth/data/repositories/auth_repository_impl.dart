@@ -63,7 +63,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } on ServerException catch (e) {
       // Still clear local data even if remote logout fails
       await _localDataSource.clearAuthData();
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } catch (e) {
       await _localDataSource.clearAuthData();
       return const Left(UnknownFailure());

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'dart:async';
 import '../../config/env.dart';
 import '../../config/constants/app_constants.dart';
 import '../../config/constants/api_endpoints.dart';
@@ -10,6 +11,7 @@ class AuthInterceptor extends Interceptor {
   final SecureStorage _secureStorage;
   final Dio _dio;
   bool _isRefreshing = false;
+  Completer<String?>? _refreshCompleter;
 
   AuthInterceptor(this._secureStorage, this._dio);
 
@@ -18,7 +20,10 @@ class AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final skipAuth = options.extra['skipAuth'] == true;
+    final path = options.path;
+    final skipAuth = options.extra['skipAuth'] == true ||
+        path.contains(ApiEndpoints.login) ||
+        path.contains(ApiEndpoints.refreshToken);
     if (skipAuth) {
       handler.next(options);
       return;
@@ -35,8 +40,15 @@ class AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
+    final statusCode = err.response?.statusCode;
     final skipAuth = err.requestOptions.extra['skipAuth'] == true;
     if (skipAuth) {
+      handler.next(err);
+      return;
+    }
+
+    if (statusCode == 410) {
+      await _clearSession();
       handler.next(err);
       return;
     }
@@ -44,53 +56,74 @@ class AuthInterceptor extends Interceptor {
     final path = err.requestOptions.path;
     final isAuthRefreshCall = path.contains(ApiEndpoints.refreshToken);
     final isAuthLoginCall = path.contains(ApiEndpoints.login);
+    final alreadyRetried = err.requestOptions.extra['authRetried'] == true;
 
-    if (err.response?.statusCode == 401 &&
-        !_isRefreshing &&
+    if (statusCode == 401 &&
         !isAuthRefreshCall &&
-        !isAuthLoginCall) {
-      _isRefreshing = true;
-
+        !isAuthLoginCall &&
+        !alreadyRetried) {
       try {
-        final refreshToken =
-            await _secureStorage.read(AppConstants.refreshTokenKey);
+        final accessToken = await _refreshAndGetAccessToken();
+        if (accessToken != null && accessToken.isNotEmpty) {
+          final retryOptions = err.requestOptions;
+          retryOptions.headers['Authorization'] = 'Bearer $accessToken';
+          retryOptions.extra['authRetried'] = true;
 
-        if (refreshToken != null && refreshToken.isNotEmpty) {
-          // Intentar refrescar el token
-          final newTokens = await _refreshToken(refreshToken);
-
-          if (newTokens != null) {
-            // Guardar nuevos tokens
-            await _secureStorage.write(
-                AppConstants.tokenKey, newTokens['access_token']);
-            if (newTokens['refresh_token'] != null) {
-              await _secureStorage.write(
-                  AppConstants.refreshTokenKey, newTokens['refresh_token']);
-            }
-
-            // Reintentar la petición original con el nuevo token
-            final opts = err.requestOptions;
-            opts.headers['Authorization'] =
-                'Bearer ${newTokens['access_token']}';
-
-            _isRefreshing = false;
-
-            final response = await _dio.fetch(opts);
-            return handler.resolve(response);
-          }
+          final response = await _dio.fetch(retryOptions);
+          return handler.resolve(response);
         }
 
-        // Si no hay refresh token o falló, limpiar sesión
         await _clearSession();
-      } catch (e) {
-        // Error al refrescar, limpiar sesión
+      } catch (_) {
         await _clearSession();
-      } finally {
-        _isRefreshing = false;
       }
     }
 
     handler.next(err);
+  }
+
+  Future<String?> _refreshAndGetAccessToken() async {
+    if (_isRefreshing) {
+      return _refreshCompleter?.future;
+    }
+
+    _isRefreshing = true;
+    _refreshCompleter = Completer<String?>();
+
+    try {
+      final refreshToken = await _secureStorage.read(AppConstants.refreshTokenKey);
+      if (refreshToken == null || refreshToken.isEmpty) {
+        _refreshCompleter?.complete(null);
+        return null;
+      }
+
+      final newTokens = await _refreshToken(refreshToken);
+      if (newTokens == null) {
+        _refreshCompleter?.complete(null);
+        return null;
+      }
+
+      final newAccessToken = (newTokens['access_token'] ?? '').toString();
+      if (newAccessToken.isEmpty) {
+        _refreshCompleter?.complete(null);
+        return null;
+      }
+
+      await _secureStorage.write(AppConstants.tokenKey, newAccessToken);
+      final newRefreshToken = (newTokens['refresh_token'] ?? '').toString();
+      if (newRefreshToken.isNotEmpty) {
+        await _secureStorage.write(AppConstants.refreshTokenKey, newRefreshToken);
+      }
+
+      _refreshCompleter?.complete(newAccessToken);
+      return newAccessToken;
+    } catch (_) {
+      _refreshCompleter?.complete(null);
+      return null;
+    } finally {
+      _isRefreshing = false;
+      _refreshCompleter = null;
+    }
   }
 
   /// Refresca el access token usando el refresh token
@@ -170,28 +203,37 @@ class LoggingInterceptor extends Interceptor {
 
 /// Retry interceptor for failed requests
 class RetryInterceptor extends Interceptor {
+  final Dio _dio;
   final int maxRetries;
   final Duration retryDelay;
 
   RetryInterceptor({
+    required Dio dio,
     this.maxRetries = 3,
     this.retryDelay = const Duration(seconds: 1),
-  });
+  }) : _dio = dio;
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    final retryCount = err.requestOptions.extra['retryCount'] ?? 0;
+    final noRetry = err.requestOptions.extra['noRetry'] == true;
+    if (noRetry) {
+      handler.next(err);
+      return;
+    }
+
+    final retryCount = (err.requestOptions.extra['retryCount'] ?? 0) as int;
 
     if (_shouldRetry(err) && retryCount < maxRetries) {
-      await Future.delayed(retryDelay * (retryCount + 1));
+      final waitDuration = _computeDelay(err, retryCount + 1);
+      await Future.delayed(waitDuration);
 
       err.requestOptions.extra['retryCount'] = retryCount + 1;
 
       try {
-        final response = await Dio().fetch(err.requestOptions);
+        final response = await _dio.fetch(err.requestOptions);
         return handler.resolve(response);
-      } catch (e) {
-        // Continue to error handler
+      } catch (_) {
+        // Continue to downstream error handler.
       }
     }
 
@@ -199,9 +241,30 @@ class RetryInterceptor extends Interceptor {
   }
 
   bool _shouldRetry(DioException err) {
+    if (err.type == DioExceptionType.cancel ||
+        err.type == DioExceptionType.badCertificate ||
+        err.type == DioExceptionType.badResponse) {
+      final status = err.response?.statusCode;
+      return status == 429 || (status != null && status >= 500);
+    }
+
     return err.type == DioExceptionType.connectionTimeout ||
+        err.type == DioExceptionType.connectionError ||
         err.type == DioExceptionType.sendTimeout ||
         err.type == DioExceptionType.receiveTimeout ||
-        (err.response?.statusCode != null && err.response!.statusCode! >= 500);
+        err.type == DioExceptionType.unknown;
+  }
+
+  Duration _computeDelay(DioException err, int attempt) {
+    final retryAfter = err.response?.headers.value('retry-after');
+    if (retryAfter != null) {
+      final seconds = int.tryParse(retryAfter);
+      if (seconds != null && seconds > 0) {
+        return Duration(seconds: seconds);
+      }
+    }
+
+    final exponential = retryDelay.inMilliseconds * attempt;
+    return Duration(milliseconds: exponential);
   }
 }

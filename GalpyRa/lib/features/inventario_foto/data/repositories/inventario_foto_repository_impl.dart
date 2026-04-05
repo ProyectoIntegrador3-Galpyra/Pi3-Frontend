@@ -23,7 +23,7 @@ class InventarioFotoRepositoryImpl implements InventarioFotoRepository {
       );
       return Right(conteo.toEntity());
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message));
     } catch (e) {
@@ -45,7 +45,7 @@ class InventarioFotoRepositoryImpl implements InventarioFotoRepository {
       );
       return Right(conteo.toEntity());
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message));
     } catch (e) {
@@ -67,7 +67,7 @@ class InventarioFotoRepositoryImpl implements InventarioFotoRepository {
       );
       return const Right(null);
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message));
     } catch (e) {
@@ -81,7 +81,7 @@ class InventarioFotoRepositoryImpl implements InventarioFotoRepository {
       final historial = await _remoteDataSource.obtenerHistorial(galponId);
       return Right(historial.map((e) => e.toEntity()).toList());
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message));
     } catch (e) {
@@ -95,7 +95,7 @@ class InventarioFotoRepositoryImpl implements InventarioFotoRepository {
       final conteo = await _remoteDataSource.obtenerConteo(conteoId);
       return Right(conteo.toEntity());
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message));
     } catch (e) {

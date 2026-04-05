@@ -21,7 +21,7 @@ class ReportesRepositoryImpl implements ReportesRepository {
       final result = await remoteDataSource.generarReporte(modelo);
       return Right(result);
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } catch (e) {
       return Left(ServerFailure(message: 'Error al generar reporte: $e'));
     }
@@ -39,7 +39,7 @@ class ReportesRepositoryImpl implements ReportesRepository {
       );
       return Right(result);
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } catch (e) {
       return Left(ServerFailure(message: 'Error al obtener historial: $e'));
     }
@@ -51,7 +51,7 @@ class ReportesRepositoryImpl implements ReportesRepository {
       final result = await remoteDataSource.obtenerReportePorId(id);
       return Right(result);
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } catch (e) {
       return Left(ServerFailure(message: 'Error al obtener reporte: $e'));
     }
@@ -66,7 +66,7 @@ class ReportesRepositoryImpl implements ReportesRepository {
       final url = await remoteDataSource.exportarReporte(reporteId, formato);
       return Right(url);
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } catch (e) {
       return Left(ServerFailure(message: 'Error al exportar reporte: $e'));
     }
@@ -78,7 +78,7 @@ class ReportesRepositoryImpl implements ReportesRepository {
       await remoteDataSource.eliminarReporte(id);
       return const Right(null);
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } catch (e) {
       return Left(ServerFailure(message: 'Error al eliminar reporte: $e'));
     }
@@ -96,7 +96,7 @@ class ReportesRepositoryImpl implements ReportesRepository {
       );
       return Right(result);
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } catch (e) {
       return Left(ServerFailure(message: 'Error al obtener datos dashboard: $e'));
     }

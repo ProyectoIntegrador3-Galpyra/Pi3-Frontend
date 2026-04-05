@@ -24,6 +24,7 @@ class HttpClient {
 
     _dio.interceptors.addAll([
       AuthInterceptor(_secureStorage, _dio),
+      RetryInterceptor(dio: _dio),
       LoggingInterceptor(),
     ]);
   }

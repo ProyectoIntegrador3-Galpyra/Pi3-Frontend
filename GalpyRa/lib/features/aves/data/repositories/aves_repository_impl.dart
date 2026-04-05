@@ -31,7 +31,7 @@ class AvesRepositoryImpl implements AvesRepository {
           return Right(cached.map((e) => e.toEntity()).toList());
         }
       } catch (_) {}
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } on NetworkException catch (e) {
       // Try to get from cache on network error
       try {
@@ -64,7 +64,7 @@ class AvesRepositoryImpl implements AvesRepository {
       );
       return const Right(null);
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message));
     } catch (e) {
@@ -86,7 +86,7 @@ class AvesRepositoryImpl implements AvesRepository {
       );
       return Right(result.toEntity());
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message));
     } catch (e) {

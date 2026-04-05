@@ -63,14 +63,6 @@ class SanidadRemoteDataSourceImpl implements SanidadRemoteDataSource {
             .toList();
       }
 
-      final data = ApiResponseParser.extractDataMap(response.data);
-      final fallbackList = data['items'] ?? data['eventos'] ?? data['historial'];
-      if (fallbackList is List) {
-        return fallbackList
-            .map((item) => RegistroSanitarioModel.fromJson(ApiResponseParser.asMap(item)))
-            .toList();
-      }
-
       return <RegistroSanitarioModel>[];
     } on DioException catch (e) {
       throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al obtener historial sanitario');

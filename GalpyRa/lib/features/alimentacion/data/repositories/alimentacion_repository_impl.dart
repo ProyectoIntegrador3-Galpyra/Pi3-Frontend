@@ -25,7 +25,7 @@ class AlimentacionRepositoryImpl implements AlimentacionRepository {
       );
       return Right(registros.map((e) => e.toEntity()).toList());
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message));
     } catch (e) {
@@ -61,7 +61,7 @@ class AlimentacionRepositoryImpl implements AlimentacionRepository {
       );
       return Right(registro.toEntity());
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message));
     } catch (e) {
@@ -83,7 +83,7 @@ class AlimentacionRepositoryImpl implements AlimentacionRepository {
       );
       return Right(consumo);
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message));
     } catch (e) {
@@ -97,7 +97,7 @@ class AlimentacionRepositoryImpl implements AlimentacionRepository {
       final inventario = await _remoteDataSource.obtenerInventarioAlimentos();
       return Right(inventario);
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message));
     } catch (e) {

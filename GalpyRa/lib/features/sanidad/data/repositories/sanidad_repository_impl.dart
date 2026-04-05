@@ -27,7 +27,7 @@ class SanidadRepositoryImpl implements SanidadRepository {
       );
       return Right(registros.map((e) => e.toEntity()).toList());
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message));
     } catch (e) {
@@ -63,7 +63,7 @@ class SanidadRepositoryImpl implements SanidadRepository {
       );
       return Right(registro.toEntity());
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message));
     } catch (e) {
@@ -77,7 +77,7 @@ class SanidadRepositoryImpl implements SanidadRepository {
       final pendientes = await _remoteDataSource.obtenerPendientes();
       return Right(pendientes.map((e) => e.toEntity()).toList());
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message));
     } catch (e) {
@@ -91,7 +91,7 @@ class SanidadRepositoryImpl implements SanidadRepository {
       final resumen = await _remoteDataSource.obtenerResumen(galponId);
       return Right(resumen);
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message));
     } catch (e) {

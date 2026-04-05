@@ -2,15 +2,17 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../config/constants/api_endpoints.dart';
+import '../../config/di/injector.dart';
 import '../network/api_response_parser.dart';
 import '../network/connectivity_service.dart';
 import '../network/http_client.dart';
 import '../storage/local_db.dart';
+import '../storage/database/app_database.dart';
 
 /// Provider para el servicio de sincronización
 final syncServiceProvider = Provider((ref) => SyncService(
-      ref.watch(connectivityServiceProvider),
-      ref.watch(httpClientProvider),
+  getIt<ConnectivityService>(),
+  getIt<HttpClient>(),
     ));
 
 /// Provider para el estado de sincronización
@@ -20,8 +22,7 @@ final syncStatusProvider =
 });
 
 /// Provider del HttpClient
-final httpClientProvider =
-    Provider((ref) => throw UnimplementedError('Must be overridden'));
+final httpClientProvider = Provider((ref) => getIt<HttpClient>());
 
 /// Estados posibles de sincronización
 enum SyncState { idle, syncing, success, error }
@@ -171,6 +172,7 @@ class SyncService {
                 'id': op.id,
                 'operacion': op.operacion,
                 'entidad': op.entidad,
+                'entidad_id': op.entidadId,
                 'payload': jsonDecode(op.payload),
                 'created_at': op.createdAt.toIso8601String(),
               })
@@ -182,7 +184,7 @@ class SyncService {
         data: {'operaciones': operaciones},
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 && ApiResponseParser.isSuccess(response.data)) {
         final data = ApiResponseParser.extractDataMap(response.data);
         final procesados = List<String>.from(data['procesadas'] ?? []);
         final fallidas = List<String>.from(data['fallidas'] ?? []);
@@ -223,7 +225,10 @@ class SyncService {
         }
 
         // 6. Marcar registros como sincronizados
-        await _marcarSincronizados(procesados);
+        final procesadasData = pendientes
+          .where((item) => procesados.contains(item.id))
+          .toList();
+        await _marcarSincronizados(procesadasData);
 
         _isSyncing = false;
         return SyncResult(
@@ -236,7 +241,10 @@ class SyncService {
         _isSyncing = false;
         return SyncResult(
           success: false,
-          message: 'Error del servidor: ${response.statusCode}',
+          message: ApiResponseParser.extractMessage(
+            response.data,
+            fallback: 'Error del servidor: ${response.statusCode}',
+          ),
         );
       }
     } catch (e) {
@@ -249,11 +257,20 @@ class SyncService {
   }
 
   /// Mark records as synchronized after successful sync
-  Future<void> _marcarSincronizados(List<String> ids) async {
-    // Aquí se marcarían los registros según su entidad
-    // Por simplicidad, esto requeriría parsear el payload de sync_queue
-    // para saber qué tabla actualizar
-    await LocalDb.galponesDao.markMultipleAsSynchronized(ids);
+  Future<void> _marcarSincronizados(
+      List<SyncQueueTableData> operacionesProcesadas) async {
+    final galponIds = <String>[];
+
+    for (final op in operacionesProcesadas) {
+      final entidad = op.entidad.toString().toLowerCase();
+      if (entidad == 'galpon' || entidad == 'galpones') {
+        galponIds.add(op.entidadId);
+      }
+    }
+
+    if (galponIds.isNotEmpty) {
+      await LocalDb.galponesDao.markMultipleAsSynchronized(galponIds);
+    }
   }
 
   /// Queue a CREATE operation
