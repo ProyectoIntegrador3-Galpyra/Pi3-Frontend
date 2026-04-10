@@ -2,5 +2,5 @@
 GalpyRa/.flutter-plugins-dependencies
 GalpyRa/build/
 GalpyRa/.idea/
-GalpyRa/*.iml
+GalpyRa/**/*.iml
 GalpyRa/flutter_*.log
