@@ -1,3 +1,6 @@
 ﻿GalpyRa/.dart_tool/
 GalpyRa/.flutter-plugins-dependencies
 GalpyRa/build/
+GalpyRa/.idea/
+GalpyRa/*.iml
+GalpyRa/flutter_*.log
