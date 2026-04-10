@@ -1,1 +1,0 @@
- C:\\Users\\crist\\OneDrive\\Documents\\P.I3\\Pi3-Frontend\\poultry_trace_app\\.dart_tool\\flutter_build\\d239f1bc96d1328251a6414f394099e4\\native_assets.json: 
