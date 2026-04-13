@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/errors/failure_message_mapper.dart';
 import '../../domain/entities/conteo_foto.dart';
@@ -13,6 +14,8 @@ class InventarioFotoState {
   final ConteoFoto? conteoActual;
   final List<ConteoFoto> historial;
   final String? imagePath;
+  final Uint8List? imageBytes;
+  final String? imageFilename;
   final String? errorMessage;
   final String? selectedGalponId;
 
@@ -22,6 +25,8 @@ class InventarioFotoState {
     this.conteoActual,
     this.historial = const [],
     this.imagePath,
+    this.imageBytes,
+    this.imageFilename,
     this.errorMessage,
     this.selectedGalponId,
   });
@@ -32,6 +37,8 @@ class InventarioFotoState {
     ConteoFoto? conteoActual,
     List<ConteoFoto>? historial,
     String? imagePath,
+    Uint8List? imageBytes,
+    String? imageFilename,
     String? errorMessage,
     String? selectedGalponId,
   }) {
@@ -41,6 +48,8 @@ class InventarioFotoState {
       conteoActual: conteoActual ?? this.conteoActual,
       historial: historial ?? this.historial,
       imagePath: imagePath ?? this.imagePath,
+      imageBytes: imageBytes ?? this.imageBytes,
+      imageFilename: imageFilename ?? this.imageFilename,
       errorMessage: errorMessage,
       selectedGalponId: selectedGalponId ?? this.selectedGalponId,
     );
@@ -63,8 +72,12 @@ class InventarioFotoController extends StateNotifier<InventarioFotoState> {
         super(const InventarioFotoState());
 
   /// Establecer imagen capturada
-  void setImagePath(String path) {
-    state = state.copyWith(imagePath: path);
+  void setImageData(String path, Uint8List bytes, String filename) {
+    state = state.copyWith(
+      imagePath: path,
+      imageBytes: bytes,
+      imageFilename: filename,
+    );
   }
 
   /// Establecer galpón seleccionado
@@ -78,12 +91,17 @@ class InventarioFotoController extends StateNotifier<InventarioFotoState> {
       state = state.copyWith(errorMessage: 'Seleccione una imagen y galpón');
       return false;
     }
+    if (state.imageBytes == null) {
+      state = state.copyWith(errorMessage: 'No hay imagen cargada');
+      return false;
+    }
 
     state = state.copyWith(isProcesando: true);
 
     final result = await _procesarImagen(
       galponId: state.selectedGalponId!,
-      imagePath: state.imagePath!,
+      imageBytes: state.imageBytes!,
+      imageFilename: state.imageFilename ?? 'inventario.jpg',
     );
 
     return result.fold(
@@ -193,6 +211,8 @@ class InventarioFotoController extends StateNotifier<InventarioFotoState> {
     state = state.copyWith(
       conteoActual: null,
       imagePath: null,
+      imageBytes: null,
+      imageFilename: null,
     );
   }
 

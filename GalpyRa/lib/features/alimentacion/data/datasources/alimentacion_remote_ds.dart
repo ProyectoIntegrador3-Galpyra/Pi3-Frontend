@@ -50,24 +50,32 @@ class AlimentacionRemoteDataSourceImpl implements AlimentacionRemoteDataSource {
     DateTime? hasta,
   }) async {
     try {
-      final response = await _httpClient.get(
-        ApiEndpoints.alimentacionByGalpon(galponId),
-        queryParameters: {
-          if (desde != null) 'fecha_inicio': desde.toIso8601String(),
-          if (hasta != null) 'fecha_fin': hasta.toIso8601String(),
-        },
-      );
+      // Backend GET /api/alimentacion no soporta filtro por galpon_id en query params;
+      // se filtra localmente después de recibir la lista completa.
+      final response = await _httpClient.get(ApiEndpoints.alimentacion);
 
       final list = ApiResponseParser.extractDataList(response.data);
-      if (list.isNotEmpty) {
-        return list
-            .map((item) => RegistroAlimentacionModel.fromJson(ApiResponseParser.asMap(item)))
-            .toList();
+      if (list.isEmpty) return <RegistroAlimentacionModel>[];
+
+      var registros = list
+          .map((item) => ApiResponseParser.asMap(item))
+          .where((m) => m['galpon_id']?.toString() == galponId)
+          .map((m) => RegistroAlimentacionModel.fromJson(m))
+          .toList();
+
+      if (desde != null) {
+        registros = registros.where((r) => !r.fecha.isBefore(desde)).toList();
+      }
+      if (hasta != null) {
+        registros = registros.where((r) => !r.fecha.isAfter(hasta)).toList();
       }
 
-      return <RegistroAlimentacionModel>[];
+      return registros;
     } on DioException catch (e) {
-      throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al obtener historial de alimentacion');
+      throw ApiResponseParser.toServerException(
+        e,
+        fallbackMessage: 'Error al obtener historial de alimentacion',
+      );
     }
   }
 
@@ -89,25 +97,39 @@ class AlimentacionRemoteDataSourceImpl implements AlimentacionRemoteDataSource {
         ApiEndpoints.alimentacion,
         data: {
           'galpon_id': galponId,
-          'fecha': fecha.toIso8601String(),
+          'fecha': fecha.toIso8601String().split('T').first,
           'tipo_alimento': tipoAlimento.name,
-          'nombre_alimento': nombreAlimento,
           'cantidad_kg': cantidadKg,
-          if (costoUnitario != null) 'costo_unitario': costoUnitario,
-          if (numeroAves != null) 'numero_aves': numeroAves,
-          if (loteAlimento != null && loteAlimento.isNotEmpty) 'lote_alimento': loteAlimento,
-          if (proveedor != null && proveedor.isNotEmpty) 'proveedor': proveedor,
-          if (observaciones != null && observaciones.isNotEmpty) 'observaciones': observaciones,
+          // Backend field is 'costo'; frontend uses 'costo_unitario'.
+          if (costoUnitario != null) 'costo': costoUnitario,
+          if (observaciones != null && observaciones.isNotEmpty)
+            'observaciones': observaciones,
         },
       );
 
       final data = ApiResponseParser.extractDataMap(response.data);
-      return RegistroAlimentacionModel.fromJson(data);
+      // Merge the original request fields (nombre_alimento etc.) not returned
+      // by the backend so the model can be constructed without nulls.
+      final merged = {
+        'nombre_alimento': nombreAlimento,
+        'costo_unitario': costoUnitario,
+        'numero_aves': numeroAves,
+        'lote_alimento': loteAlimento,
+        'proveedor': proveedor,
+        ...data,
+      };
+      return RegistroAlimentacionModel.fromJson(merged);
     } on DioException catch (e) {
-      throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al registrar alimentacion');
+      throw ApiResponseParser.toServerException(
+        e,
+        fallbackMessage: 'Error al registrar alimentacion',
+      );
     } catch (e) {
       if (e is ServerException) rethrow;
-      throw ServerException(message: 'Error al registrar alimentacion', originalException: e);
+      throw ServerException(
+        message: 'Error al registrar alimentacion',
+        originalException: e,
+      );
     }
   }
 
@@ -119,54 +141,45 @@ class AlimentacionRemoteDataSourceImpl implements AlimentacionRemoteDataSource {
   }) async {
     try {
       final response = await _httpClient.get(
-        ApiEndpoints.alimentacionByGalpon(galponId),
+        ApiEndpoints.alimentacion,
         queryParameters: {
-          'resumen': true,
           'fecha_inicio': desde.toIso8601String(),
           'fecha_fin': hasta.toIso8601String(),
         },
       );
       return ApiResponseParser.extractDataMap(response.data);
     } on DioException catch (e) {
-      throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al obtener consumo promedio');
+      throw ApiResponseParser.toServerException(
+        e,
+        fallbackMessage: 'Error al obtener consumo promedio',
+      );
     }
   }
 
   @override
   Future<Map<String, double>> obtenerInventarioAlimentos() async {
     try {
-      final response = await _httpClient.get(
-        ApiEndpoints.alimentacion,
-        queryParameters: {'inventario': true},
-      );
-
-      final data = ApiResponseParser.extractDataMap(response.data);
-      final map = <String, double>{};
-
-      if (data.isNotEmpty) {
-        for (final entry in data.entries) {
-          if (entry.value is num) {
-            map[entry.key] = (entry.value as num).toDouble();
-          }
-        }
-      }
-
-      if (map.isNotEmpty) {
-        return map;
-      }
+      final response = await _httpClient.get(ApiEndpoints.alimentacion);
 
       final list = ApiResponseParser.extractDataList(response.data);
+      final map = <String, double>{};
       for (final item in list) {
         final row = ApiResponseParser.asMap(item);
-        final nombre = (row['nombre_alimento'] ?? row['nombre'] ?? row['tipo'])?.toString();
-        final cantidad = row['cantidad'] ?? row['stock_kg'] ?? row['cantidad_kg'];
+        final nombre =
+            (row['nombre_alimento'] ?? row['tipo_alimento'] ?? row['nombre'])
+                ?.toString();
+        final cantidad =
+            row['cantidad_kg'] ?? row['cantidad'] ?? row['stock_kg'];
         if (nombre != null && cantidad is num) {
           map[nombre] = cantidad.toDouble();
         }
       }
       return map;
     } on DioException catch (e) {
-      throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al obtener inventario de alimentos');
+      throw ApiResponseParser.toServerException(
+        e,
+        fallbackMessage: 'Error al obtener inventario de alimentos',
+      );
     }
   }
 }

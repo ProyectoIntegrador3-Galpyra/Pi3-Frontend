@@ -19,12 +19,12 @@ class ApiEndpoints {
   static const String galpones = '/api/galpones';
   static String galponById(String id) => '/api/galpones/$id';
 
-  // Aves endpoints
-  static const String aves = '/api/aves';
-  static const String inventarioAves = '/api/aves/inventario';
-  static const String mortalidad = '/api/aves/mortalidad';
-  static const String ingresoAves = '/api/aves/ingreso';
-  static String avesByGalpon(String galponId) => '/api/galpones/$galponId/aves';
+  // Aves / Lotes endpoints
+  static const String aves = '/api/lotes';
+  static const String ingresoAves = '/api/lotes';
+  static const String mortalidad = '/api/mortalidad';
+  static const String ingresos = '/api/ingresos';
+  static String avesByGalpon(String galponId) => '/api/lotes/galpon/$galponId';
 
   // Producción endpoints
   static const String produccion = '/api/produccion';
@@ -34,12 +34,14 @@ class ApiEndpoints {
   // Sanidad endpoints
   static const String sanidad = '/api/sanidad';
   static String historialSanidad(String loteId) => '/api/sanidad/historial/$loteId';
-  static String sanidadByGalpon(String galponId) => '/api/galpones/$galponId/sanidad';
+  // GET /api/sanidad returns all events; filter client-side by galpon_id
+  static String sanidadByGalpon(String galponId) => '/api/sanidad';
 
   // Alimentación endpoints
   static const String alimentacion = '/api/alimentacion';
   static String alimentacionRango(String loteId) => '/api/alimentacion/conversion/$loteId';
-  static String alimentacionByGalpon(String galponId) => '/api/galpones/$galponId/alimentacion';
+  // GET /api/alimentacion returns all records; filter client-side by galpon_id
+  static String alimentacionByGalpon(String galponId) => '/api/alimentacion';
 
   // Lotes endpoints
   static const String lotes = '/api/lotes';

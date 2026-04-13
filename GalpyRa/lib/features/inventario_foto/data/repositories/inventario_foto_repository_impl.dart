@@ -1,6 +1,8 @@
+import 'dart:typed_data';
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failure.dart';
+import '../../../../core/storage/local_db.dart';
 import '../../domain/entities/conteo_foto.dart';
 import '../../domain/repositories/inventario_foto_repository.dart';
 import '../datasources/inventario_foto_remote_ds.dart';
@@ -14,12 +16,14 @@ class InventarioFotoRepositoryImpl implements InventarioFotoRepository {
   @override
   Future<Either<Failure, ConteoFoto>> procesarImagen({
     required String galponId,
-    required String imagePath,
+    required Uint8List imageBytes,
+    required String imageFilename,
   }) async {
     try {
       final conteo = await _remoteDataSource.procesarImagen(
         galponId: galponId,
-        imagePath: imagePath,
+        imageBytes: imageBytes,
+        imageFilename: imageFilename,
       );
       return Right(conteo.toEntity());
     } on ServerException catch (e) {
@@ -69,14 +73,35 @@ class InventarioFotoRepositoryImpl implements InventarioFotoRepository {
     } on ServerException catch (e) {
       return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } on NetworkException catch (e) {
-      return Left(NetworkFailure(message: e.message));
+      final opId =
+          'inventario-confirmar-${DateTime.now().millisecondsSinceEpoch}';
+      try {
+        await LocalDb.syncQueueDao.addToQueue(
+          id: opId,
+          operacion: 'UPSERT',
+          entidad: 'inventario_foto',
+          entidadId: conteoId,
+          payload: {
+            'job_id': conteoId,
+            'galpon_id': galponId,
+            'conteo_confirmado': cantidadFinal,
+            'cantidad_final': cantidadFinal,
+            'conteo_final': cantidadFinal,
+            'endpoint': '/api/inventario/confirmar',
+          },
+        );
+        return const Right(null);
+      } catch (_) {
+        return Left(NetworkFailure(message: e.message));
+      }
     } catch (e) {
       return Left(UnexpectedFailure(message: e.toString()));
     }
   }
 
   @override
-  Future<Either<Failure, List<ConteoFoto>>> obtenerHistorial(String galponId) async {
+  Future<Either<Failure, List<ConteoFoto>>> obtenerHistorial(
+      String galponId) async {
     try {
       final historial = await _remoteDataSource.obtenerHistorial(galponId);
       return Right(historial.map((e) => e.toEntity()).toList());

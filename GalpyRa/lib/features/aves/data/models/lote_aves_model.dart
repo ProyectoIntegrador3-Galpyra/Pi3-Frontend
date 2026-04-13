@@ -15,16 +15,34 @@ class LoteAvesModel extends LoteAves {
   });
 
   factory LoteAvesModel.fromJson(Map<String, dynamic> json) {
+    // Backend uses cantidad_actual / cantidad_inicial; frontend legacy used cantidad.
+    final cantidad = (json['cantidad_actual'] as int?) ??
+        (json['cantidad_inicial'] as int?) ??
+        (json['cantidad'] as int? ?? 0);
     return LoteAvesModel(
       id: json['id'] as String,
       galponId: json['galpon_id'] as String,
       raza: json['raza'] as String?,
-      cantidad: json['cantidad'] as int,
+      cantidad: cantidad,
       fechaIngreso: DateTime.parse(json['fecha_ingreso'] as String),
       edadSemanas: (json['edad_semanas'] as int?) ?? 0,
       pesoPromedio: (json['peso_promedio'] as num?)?.toDouble(),
       observaciones: json['observaciones'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
+    );
+  }
+
+  factory LoteAvesModel.fromEntity(LoteAves entity) {
+    return LoteAvesModel(
+      id: entity.id,
+      galponId: entity.galponId,
+      raza: entity.raza,
+      cantidad: entity.cantidad,
+      fechaIngreso: entity.fechaIngreso,
+      edadSemanas: entity.edadSemanas,
+      pesoPromedio: entity.pesoPromedio,
+      observaciones: entity.observaciones,
+      createdAt: entity.createdAt,
     );
   }
 
@@ -40,20 +58,6 @@ class LoteAvesModel extends LoteAves {
       'observaciones': observaciones,
       'created_at': createdAt.toIso8601String(),
     };
-  }
-
-  factory LoteAvesModel.fromEntity(LoteAves entity) {
-    return LoteAvesModel(
-      id: entity.id,
-      galponId: entity.galponId,
-      raza: entity.raza,
-      cantidad: entity.cantidad,
-      fechaIngreso: entity.fechaIngreso,
-      edadSemanas: entity.edadSemanas,
-      pesoPromedio: entity.pesoPromedio,
-      observaciones: entity.observaciones,
-      createdAt: entity.createdAt,
-    );
   }
 
   LoteAves toEntity() {

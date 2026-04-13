@@ -12,12 +12,19 @@ class TrazabilidadPage extends ConsumerStatefulWidget {
 }
 
 class _TrazabilidadPageState extends ConsumerState<TrazabilidadPage> {
-  final _loteIdController = TextEditingController();
   final _tokenController = TextEditingController();
+  String? _selectedLoteId;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(
+      () => ref.read(trazabilidadControllerProvider.notifier).cargarLotes(),
+    );
+  }
 
   @override
   void dispose() {
-    _loteIdController.dispose();
     _tokenController.dispose();
     super.dispose();
   }
@@ -25,6 +32,7 @@ class _TrazabilidadPageState extends ConsumerState<TrazabilidadPage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(trazabilidadControllerProvider);
+    final lotes = ref.watch(lotesProvider);
 
     return AppScaffold(
       title: 'Trazabilidad',
@@ -34,26 +42,37 @@ class _TrazabilidadPageState extends ConsumerState<TrazabilidadPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Generar Token (requiere sesion)',
+              'Generar Token (requiere sesión)',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(height: 8),
-            TextField(
-              controller: _loteIdController,
+            DropdownButtonFormField<String>(
+              value: _selectedLoteId,
               decoration: const InputDecoration(
-                labelText: 'Lote ID',
+                labelText: 'Lote',
                 border: OutlineInputBorder(),
               ),
+              items: lotes
+                  .map(
+                    (lote) => DropdownMenuItem<String>(
+                      value: lote.id,
+                      child: Text(lote.label),
+                    ),
+                  )
+                  .toList(),
+              onChanged: state.isLoading
+                  ? null
+                  : (value) => setState(() => _selectedLoteId = value),
             ),
             const SizedBox(height: 8),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: state.isLoading
+                onPressed: state.isLoading || _selectedLoteId == null
                     ? null
                     : () => ref
                         .read(trazabilidadControllerProvider.notifier)
-                        .generarToken(_loteIdController.text.trim()),
+                        .generarToken(_selectedLoteId!),
                 child: const Text('Generar token'),
               ),
             ),
@@ -66,7 +85,7 @@ class _TrazabilidadPageState extends ConsumerState<TrazabilidadPage> {
             ],
             const SizedBox(height: 24),
             const Text(
-              'Consulta Publica (sin JWT)',
+              'Consulta Pública (sin JWT)',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(height: 8),
@@ -114,10 +133,22 @@ class _ResultadoTrazabilidad extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final lote = data['lote'];
+    final loteRaw = data['lote'];
+    final lote = loteRaw is Map ? loteRaw : <String, dynamic>{};
     final eventosRaw =
         data['eventos_sanitarios'] ?? data['eventos'] ?? <dynamic>[];
     final eventos = eventosRaw is List ? eventosRaw : <dynamic>[];
+    final nombreLote =
+        (lote['nombre_lote'] ?? lote['codigo_lote'] ?? 'No disponible')
+            .toString();
+    final nombreGalpon =
+        (lote['nombre_galpon'] ?? lote['galpon_nombre'] ?? 'No disponible')
+            .toString();
+    final fechaIngreso = (lote['fecha_ingreso'] ?? 'No disponible').toString();
+    final raza = (lote['raza'] ?? 'No disponible').toString();
+    final cantidadActual =
+        (lote['cantidad_actual'] ?? lote['cantidad_inicial'] ?? 'No disponible')
+            .toString();
 
     return Card(
       child: Padding(
@@ -130,10 +161,11 @@ class _ResultadoTrazabilidad extends StatelessWidget {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            if (lote != null)
-              Text('Lote: ${lote.toString()}')
-            else
-              const Text('Lote: no disponible'),
+            Text('Lote: $nombreLote'),
+            Text('Galpón: $nombreGalpon'),
+            Text('Fecha ingreso: $fechaIngreso'),
+            Text('Raza: $raza'),
+            Text('Cantidad actual de aves: $cantidadActual'),
             const SizedBox(height: 8),
             const Text(
               'Eventos sanitarios',

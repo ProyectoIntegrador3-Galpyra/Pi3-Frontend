@@ -88,7 +88,8 @@ class AvesController extends StateNotifier<AvesState> {
 
     return result.fold(
       (failure) {
-        state = state.copyWith(isLoading: false, errorMessage: mapFailureMessage(failure));
+        state = state.copyWith(
+            isLoading: false, errorMessage: mapFailureMessage(failure));
         return false;
       },
       (_) {
@@ -103,6 +104,7 @@ class AvesController extends StateNotifier<AvesState> {
   /// Registrar ingreso de aves
   Future<bool> registrarIngreso({
     required String galponId,
+    required String nombreLote,
     required String raza,
     required int cantidad,
     required DateTime fechaIngreso,
@@ -114,6 +116,7 @@ class AvesController extends StateNotifier<AvesState> {
 
     final result = await _registrarIngreso(
       galponId: galponId,
+      nombreLote: nombreLote,
       raza: raza,
       cantidad: cantidad,
       fechaIngreso: fechaIngreso,
@@ -124,7 +127,8 @@ class AvesController extends StateNotifier<AvesState> {
 
     return result.fold(
       (failure) {
-        state = state.copyWith(isLoading: false, errorMessage: mapFailureMessage(failure));
+        state = state.copyWith(
+            isLoading: false, errorMessage: mapFailureMessage(failure));
         return false;
       },
       (lote) {
@@ -147,7 +151,8 @@ class AvesController extends StateNotifier<AvesState> {
 }
 
 /// Provider para el controlador de aves
-final avesControllerProvider = StateNotifierProvider<AvesController, AvesState>((ref) {
+final avesControllerProvider =
+    StateNotifierProvider<AvesController, AvesState>((ref) {
   return AvesController(
     consultarInventario: getIt<ConsultarInventarioUseCase>(),
     registrarMortalidad: getIt<RegistrarMortalidadUseCase>(),

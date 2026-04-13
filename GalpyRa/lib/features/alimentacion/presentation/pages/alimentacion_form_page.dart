@@ -15,41 +15,35 @@ class AlimentacionFormPage extends ConsumerStatefulWidget {
   const AlimentacionFormPage({super.key, required this.galponId});
 
   @override
-  ConsumerState<AlimentacionFormPage> createState() => _AlimentacionFormPageState();
+  ConsumerState<AlimentacionFormPage> createState() =>
+      _AlimentacionFormPageState();
 }
 
 class _AlimentacionFormPageState extends ConsumerState<AlimentacionFormPage> {
   final _formKey = GlobalKey<FormState>();
-  final _nombreAlimentoController = TextEditingController();
   final _cantidadController = TextEditingController();
   final _costoController = TextEditingController();
-  final _avesController = TextEditingController();
-  final _loteController = TextEditingController();
-  final _proveedorController = TextEditingController();
   final _observacionesController = TextEditingController();
 
   TipoAlimento _tipoSeleccionado = TipoAlimento.concentrado;
+  String _tipoNombreSeleccionado = 'Ponedoras I';
   DateTime _fechaSeleccionada = DateTime.now();
 
-  final List<String> _alimentosSugeridos = [
-    'Concentrado Ponedoras Fase 1',
-    'Concentrado Ponedoras Fase 2',
-    'Concentrado Inicio',
-    'Concentrado Crecimiento',
-    'Maíz molido',
-    'Soya integral',
-    'Vitaminas ADE',
-    'Minerales',
+  final List<String> _tiposAlimentoReales = [
+    'Pollitas',
+    'Pollas',
+    'Prepostura P-80',
+    'Ponedoras I',
+    'Ponedoras I SP',
+    'Campo Huevo',
+    'Carbonato de Calcio',
+    'Otro',
   ];
 
   @override
   void dispose() {
-    _nombreAlimentoController.dispose();
     _cantidadController.dispose();
     _costoController.dispose();
-    _avesController.dispose();
-    _loteController.dispose();
-    _proveedorController.dispose();
     _observacionesController.dispose();
     super.dispose();
   }
@@ -71,21 +65,16 @@ class _AlimentacionFormPageState extends ConsumerState<AlimentacionFormPage> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final success = await ref.read(alimentacionControllerProvider.notifier).registrarAlimentacion(
+    final success = await ref
+        .read(alimentacionControllerProvider.notifier)
+        .registrarAlimentacion(
           galponId: widget.galponId,
           fecha: _fechaSeleccionada,
           tipoAlimento: _tipoSeleccionado,
-          nombreAlimento: _nombreAlimentoController.text,
+          nombreAlimento: _tipoNombreSeleccionado,
           cantidadKg: double.parse(_cantidadController.text),
           costoUnitario: _costoController.text.isNotEmpty
               ? double.parse(_costoController.text)
-              : null,
-          numeroAves: _avesController.text.isNotEmpty
-              ? int.parse(_avesController.text)
-              : null,
-          loteAlimento: _loteController.text.isNotEmpty ? _loteController.text : null,
-          proveedor: _proveedorController.text.isNotEmpty
-              ? _proveedorController.text
               : null,
           observaciones: _observacionesController.text.isNotEmpty
               ? _observacionesController.text
@@ -132,63 +121,28 @@ class _AlimentacionFormPageState extends ConsumerState<AlimentacionFormPage> {
                     const SizedBox(height: 16),
 
                     // Tipo de alimento
-                    DropdownButtonFormField<TipoAlimento>(
-                      value: _tipoSeleccionado,
+                    DropdownButtonFormField<String>(
+                      value: _tipoNombreSeleccionado,
                       decoration: const InputDecoration(
                         labelText: 'Tipo de alimento',
                         prefixIcon: Icon(Icons.category),
                         border: OutlineInputBorder(),
                       ),
-                      items: TipoAlimento.values
+                      items: _tiposAlimentoReales
                           .map((tipo) => DropdownMenuItem(
                                 value: tipo,
-                                child: Text(_getTipoNombre(tipo)),
+                                child: Text(tipo),
                               ))
                           .toList(),
                       onChanged: (value) {
                         if (value != null) {
                           setState(() {
-                            _tipoSeleccionado = value;
+                            _tipoNombreSeleccionado = value;
+                            _tipoSeleccionado = value == 'Otro'
+                                ? TipoAlimento.otro
+                                : TipoAlimento.concentrado;
                           });
                         }
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Nombre del alimento con sugerencias
-                    Autocomplete<String>(
-                      optionsBuilder: (textEditingValue) {
-                        if (textEditingValue.text.isEmpty) {
-                          return _alimentosSugeridos;
-                        }
-                        return _alimentosSugeridos.where((alimento) => alimento
-                            .toLowerCase()
-                            .contains(textEditingValue.text.toLowerCase()));
-                      },
-                      onSelected: (selection) {
-                        _nombreAlimentoController.text = selection;
-                      },
-                      fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
-                        controller.text = _nombreAlimentoController.text;
-                        controller.addListener(() {
-                          _nombreAlimentoController.text = controller.text;
-                        });
-                        return TextFormField(
-                          controller: controller,
-                          focusNode: focusNode,
-                          decoration: const InputDecoration(
-                            labelText: 'Nombre del alimento',
-                            hintText: 'Ej: Concentrado Ponedoras',
-                            prefixIcon: Icon(Icons.restaurant),
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Ingrese el nombre del alimento';
-                            }
-                            return null;
-                          },
-                        );
                       },
                     ),
                     const SizedBox(height: 16),
@@ -201,7 +155,8 @@ class _AlimentacionFormPageState extends ConsumerState<AlimentacionFormPage> {
                             controller: _cantidadController,
                             label: 'Cantidad (kg)',
                             hint: 'Ej: 250',
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
                             prefixIcon: Icons.scale,
                             validator: (value) {
                               if (value == null || value.isEmpty) {
@@ -220,40 +175,9 @@ class _AlimentacionFormPageState extends ConsumerState<AlimentacionFormPage> {
                             controller: _costoController,
                             label: 'Costo/kg (\$)',
                             hint: 'Opcional',
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
                             prefixIcon: Icons.attach_money,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Número de aves
-                    AppTextField(
-                      controller: _avesController,
-                      label: 'Número de aves',
-                      hint: 'Para calcular consumo por ave (opcional)',
-                      keyboardType: TextInputType.number,
-                      prefixIcon: Icons.pets,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Lote y proveedor
-                    Row(
-                      children: [
-                        Expanded(
-                          child: AppTextField(
-                            controller: _loteController,
-                            label: 'Lote',
-                            hint: 'Opcional',
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: AppTextField(
-                            controller: _proveedorController,
-                            label: 'Proveedor',
-                            hint: 'Opcional',
                           ),
                         ),
                       ],
@@ -292,22 +216,5 @@ class _AlimentacionFormPageState extends ConsumerState<AlimentacionFormPage> {
               ),
             ),
     );
-  }
-
-  String _getTipoNombre(TipoAlimento tipo) {
-    switch (tipo) {
-      case TipoAlimento.concentrado:
-        return 'Concentrado';
-      case TipoAlimento.maiz:
-        return 'Maíz';
-      case TipoAlimento.soya:
-        return 'Soya';
-      case TipoAlimento.vitaminas:
-        return 'Vitaminas';
-      case TipoAlimento.minerales:
-        return 'Minerales';
-      case TipoAlimento.otro:
-        return 'Otro';
-    }
   }
 }

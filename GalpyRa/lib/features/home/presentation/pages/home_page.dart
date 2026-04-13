@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../config/routes/route_paths.dart';
 import '../../../../config/theme/colors.dart';
-import '../../../../core/widgets/app_scaffold.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
+import '../../../galpones/presentation/controllers/galpones_controller.dart';
 
 /// Pagina principal - Home
 class HomePage extends ConsumerWidget {
@@ -15,41 +15,118 @@ class HomePage extends ConsumerWidget {
     final authState = ref.watch(authControllerProvider);
     final nombreUsuario = authState.user?.name ?? 'Usuario';
 
-    return AppScaffold(
-      title: 'PoultryTrace',
-      showBackButton: false,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined),
-          onPressed: () {
-            // TODO: Navigate to notifications
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.settings_outlined),
-          onPressed: () => context.push(RoutePaths.settings),
-        ),
-      ],
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: _buildHomeAppBar(context),
       body: RefreshIndicator(
         onRefresh: () async {
           // TODO: Refresh dashboard data
         },
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildGreeting(context, nombreUsuario),
-              const SizedBox(height: 18),
-              _buildSectionTitle(context, 'Resumen del dia'),
-              const SizedBox(height: 10),
-              _buildQuickStats(context),
-              const SizedBox(height: 24),
-              _buildSectionTitle(context, 'Modulos'),
-              const SizedBox(height: 12),
-              _buildMenuGrid(context),
-              const SizedBox(height: 24),
-              _buildRecentActivity(context),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final bool isTablet = width > 720;
+            final double horizontalPadding = isTablet ? 24 : 16;
+            final int crossAxisCount;
+
+            if (width < 480) {
+              crossAxisCount = 2;
+            } else if (width <= 720) {
+              crossAxisCount = 3;
+            } else {
+              crossAxisCount = 4;
+            }
+
+            return SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.fromLTRB(
+                horizontalPadding,
+                16,
+                horizontalPadding,
+                32,
+              ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 800),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildGreeting(context, nombreUsuario),
+                      const SizedBox(height: 18),
+                      _buildSectionTitle(context, 'Resumen del día'),
+                      const SizedBox(height: 10),
+                      _buildQuickStats(context),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle(context, 'Módulos'),
+                      const SizedBox(height: 12),
+                      _buildMenuGrid(context, ref, crossAxisCount),
+                      const SizedBox(height: 24),
+                      _buildRecentActivity(context),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  PreferredSizeWidget _buildHomeAppBar(BuildContext context) {
+    return PreferredSize(
+      preferredSize: const Size.fromHeight(84),
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppColors.primary,
+              AppColors.accentGreen,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            centerTitle: true,
+            title: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const Text(
+                  'GALPyra',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  'Gestión Avícola y Trazabilidad Productiva',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.white.withValues(alpha: 0.85),
+                    fontWeight: FontWeight.w500,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.notifications_outlined),
+                onPressed: () {
+                  // TODO: Navigate to notifications
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.settings_outlined),
+                onPressed: () => context.push(RoutePaths.settings),
+              ),
             ],
           ),
         ),
@@ -57,11 +134,88 @@ class HomePage extends ConsumerWidget {
     );
   }
 
+  Future<void> _openModuleWithGalpon(
+    BuildContext context,
+    WidgetRef ref,
+    String moduleName,
+    String Function(String galponId) routeBuilder,
+  ) async {
+    final controller = ref.read(galponesControllerProvider.notifier);
+    var galpones = ref.read(galponesControllerProvider).galpones;
+
+    if (galpones.isEmpty) {
+      await controller.cargarGalpones();
+      galpones = ref.read(galponesControllerProvider).galpones;
+    }
+
+    if (!context.mounted) return;
+
+    if (galpones.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Primero crea o selecciona un galpón'),
+        ),
+      );
+      context.push(RoutePaths.galpones);
+      return;
+    }
+
+    if (galpones.length == 1) {
+      context.push(routeBuilder(galpones.first.id));
+      return;
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Selecciona un galpón para $moduleName',
+                  style: Theme.of(sheetContext).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primaryDark,
+                      ),
+                ),
+                const SizedBox(height: 12),
+                Flexible(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: galpones.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (_, index) {
+                      final galpon = galpones[index];
+                      return ListTile(
+                        leading: const Icon(Icons.home_work_outlined),
+                        title: Text(galpon.nombre),
+                        subtitle: Text(galpon.ubicacion ?? 'Sin ubicación'),
+                        onTap: () {
+                          Navigator.of(sheetContext).pop();
+                          context.push(routeBuilder(galpon.id));
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildGreeting(BuildContext context, String nombre) {
     final hora = DateTime.now().hour;
     String saludo;
     if (hora < 12) {
-      saludo = 'Buenos dias';
+      saludo = 'Buenos días';
     } else if (hora < 18) {
       saludo = 'Buenas tardes';
     } else {
@@ -138,7 +292,7 @@ class HomePage extends ConsumerWidget {
         const SizedBox(width: 12),
         Expanded(
           child: _buildStatCard(
-            'Produccion Hoy',
+            'Producción Hoy',
             '285',
             Icons.egg_outlined,
             AppColors.secondary,
@@ -155,7 +309,8 @@ class HomePage extends ConsumerWidget {
     Color color,
   ) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      constraints: const BoxConstraints(minHeight: 100),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -190,7 +345,7 @@ class HomePage extends ConsumerWidget {
           Text(
             valor,
             style: TextStyle(
-              fontSize: 26,
+              fontSize: 28,
               fontWeight: FontWeight.bold,
               color: color,
             ),
@@ -209,7 +364,8 @@ class HomePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildMenuGrid(BuildContext context) {
+  Widget _buildMenuGrid(
+      BuildContext context, WidgetRef ref, int crossAxisCount) {
     final menuItems = [
       _MenuItem(
         'Galpones',
@@ -221,25 +377,45 @@ class HomePage extends ConsumerWidget {
         'Aves',
         Icons.spa_outlined,
         AppColors.accentGreen,
-        () => context.push(RoutePaths.aves),
+        () => _openModuleWithGalpon(
+          context,
+          ref,
+          'Aves',
+          RoutePaths.avesPath,
+        ),
       ),
       _MenuItem(
-        'Produccion',
+        'Producción',
         Icons.egg_outlined,
         AppColors.secondary,
-        () => context.push(RoutePaths.produccion),
+        () => _openModuleWithGalpon(
+          context,
+          ref,
+          'Producción',
+          RoutePaths.produccionPath,
+        ),
       ),
       _MenuItem(
         'Sanidad',
         Icons.medical_services_outlined,
         AppColors.error,
-        () => context.push(RoutePaths.sanidad),
+        () => _openModuleWithGalpon(
+          context,
+          ref,
+          'Sanidad',
+          RoutePaths.sanidadPath,
+        ),
       ),
       _MenuItem(
-        'Alimentacion',
+        'Alimentación',
         Icons.restaurant_outlined,
         AppColors.primary,
-        () => context.push(RoutePaths.alimentacion),
+        () => _openModuleWithGalpon(
+          context,
+          ref,
+          'Alimentación',
+          RoutePaths.alimentacionPath,
+        ),
       ),
       _MenuItem(
         'Inventario Foto',
@@ -270,11 +446,11 @@ class HomePage extends ConsumerWidget {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
         mainAxisSpacing: 16,
-        crossAxisSpacing: 12,
-        childAspectRatio: 0.88,
+        crossAxisSpacing: 16,
+        childAspectRatio: 0.95,
       ),
       itemCount: menuItems.length,
       itemBuilder: (context, index) {
@@ -287,53 +463,53 @@ class HomePage extends ConsumerWidget {
   Widget _buildMenuItem(_MenuItem item) {
     return InkWell(
       onTap: item.onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  item.color.withOpacity(0.08),
-                  item.color.withOpacity(0.15),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: item.color.withOpacity(0.25),
-                width: 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: item.color.withOpacity(0.15),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              item.color.withOpacity(0.08),
+              item.color.withOpacity(0.15),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: item.color.withOpacity(0.25),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: item.color.withOpacity(0.15),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
             ),
-            child: Icon(
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
               item.icon,
               color: item.color,
-              size: 26,
+              size: 36,
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            item.label,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+            const SizedBox(height: 10),
+            Text(
+              item.label,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -351,9 +527,9 @@ class HomePage extends ConsumerWidget {
             ),
             TextButton(
               onPressed: () {
-                // TODO: Ver mas
+                // TODO: Ver más
               },
-              child: const Text('Ver mas'),
+              child: const Text('Ver más'),
             ),
           ],
         ),
@@ -362,24 +538,24 @@ class HomePage extends ConsumerWidget {
           child: Column(
             children: [
               _buildActivityItem(
-                'Produccion registrada',
-                'Galpon A - 285 huevos',
+                'Producción registrada',
+                'Galpón A - 285 huevos',
                 Icons.egg,
                 Colors.orange,
                 'Hace 2 horas',
               ),
               const Divider(height: 1),
               _buildActivityItem(
-                'Alimentacion registrada',
-                'Galpon B - 150 kg',
+                'Alimentación registrada',
+                'Galpón B - 150 kg',
                 Icons.restaurant,
                 Colors.green,
                 'Hace 4 horas',
               ),
               const Divider(height: 1),
               _buildActivityItem(
-                'Vacunacion completada',
-                'Galpon C - Newcastle',
+                'Vacunación completada',
+                'Galpón C - Newcastle',
                 Icons.vaccines,
                 Colors.blue,
                 'Ayer',
@@ -398,25 +574,31 @@ class HomePage extends ConsumerWidget {
     Color color,
     String tiempo,
   ) {
-    return ListTile(
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 72),
+      child: ListTile(
+        leading: CircleAvatar(
+          radius: 20,
+          backgroundColor: color.withValues(alpha: 0.14),
+          child: Icon(icon, color: color, size: 28),
         ),
-        child: Icon(icon, color: color, size: 20),
-      ),
-      title: Text(
-        titulo,
-        style: const TextStyle(fontWeight: FontWeight.w600),
-      ),
-      subtitle: Text(subtitulo),
-      trailing: Text(
-        tiempo,
-        style: TextStyle(
-          fontSize: 12,
-          color: Colors.grey[500],
+        title: Text(
+          titulo,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        subtitle: Text(
+          subtitulo,
+          style: const TextStyle(fontSize: 12),
+        ),
+        trailing: Text(
+          tiempo,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey[500],
+          ),
         ),
       ),
     );

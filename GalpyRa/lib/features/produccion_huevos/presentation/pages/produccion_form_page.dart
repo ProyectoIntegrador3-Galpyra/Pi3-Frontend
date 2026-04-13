@@ -25,8 +25,10 @@ class _ProduccionFormPageState extends ConsumerState<ProduccionFormPage> {
   final _suciosController = TextEditingController(text: '0');
   final _grandeAAController = TextEditingController(text: '0');
   final _grandeAController = TextEditingController(text: '0');
+  final _aaController = TextEditingController(text: '0');
   final _medianoController = TextEditingController(text: '0');
   final _pequenoController = TextEditingController(text: '0');
+  final _cController = TextEditingController(text: '0');
   final _observacionesController = TextEditingController();
   DateTime _fechaSeleccionada = DateTime.now();
 
@@ -37,8 +39,10 @@ class _ProduccionFormPageState extends ConsumerState<ProduccionFormPage> {
     _suciosController.dispose();
     _grandeAAController.dispose();
     _grandeAController.dispose();
+    _aaController.dispose();
     _medianoController.dispose();
     _pequenoController.dispose();
+    _cController.dispose();
     _observacionesController.dispose();
     super.dispose();
   }
@@ -60,7 +64,13 @@ class _ProduccionFormPageState extends ConsumerState<ProduccionFormPage> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final success = await ref.read(produccionHuevosControllerProvider.notifier).registrarProduccion(
+    final categoriaAA = int.tryParse(_aaController.text) ?? 0;
+    final categoriaA = int.tryParse(_medianoController.text) ?? 0;
+    final categoriaB = int.tryParse(_pequenoController.text) ?? 0;
+    final categoriaC = int.tryParse(_cController.text) ?? 0;
+    final success = await ref
+        .read(produccionHuevosControllerProvider.notifier)
+        .registrarProduccion(
           galponId: widget.galponId,
           fecha: _fechaSeleccionada,
           cantidadTotal: int.parse(_cantidadTotalController.text),
@@ -68,11 +78,12 @@ class _ProduccionFormPageState extends ConsumerState<ProduccionFormPage> {
           huevosSucios: int.tryParse(_suciosController.text) ?? 0,
           huevosGrandeAA: int.tryParse(_grandeAAController.text) ?? 0,
           huevosGrandeA: int.tryParse(_grandeAController.text) ?? 0,
-          huevosMediano: int.tryParse(_medianoController.text) ?? 0,
-          huevosPequeno: int.tryParse(_pequenoController.text) ?? 0,
+          // Mapeo temporal de ICONTEC al contrato actual del backend.
+          huevosMediano: categoriaAA,
+          huevosPequeno: categoriaA + categoriaB + categoriaC,
           observaciones: _observacionesController.text.isNotEmpty
-              ? _observacionesController.text
-              : null,
+              ? '${_observacionesController.text}\nICONTEC A (53-59.9g): $categoriaA\nICONTEC B (46-52.9g): $categoriaB\nICONTEC C (<46g): $categoriaC'
+              : 'ICONTEC A (53-59.9g): $categoriaA\nICONTEC B (46-52.9g): $categoriaB\nICONTEC C (<46g): $categoriaC',
         );
 
     if (success && mounted) {
@@ -150,8 +161,11 @@ class _ProduccionFormPageState extends ConsumerState<ProduccionFormPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Clasificacion por tamano',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            'Clasificación ICONTEC 1240',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
                                   fontWeight: FontWeight.w700,
                                   color: AppColors.primaryDark,
                                 ),
@@ -162,7 +176,7 @@ class _ProduccionFormPageState extends ConsumerState<ProduccionFormPage> {
                               Expanded(
                                 child: AppTextField(
                                   controller: _grandeAAController,
-                                  label: 'Grande AA',
+                                  label: 'YUMBO (>78g)',
                                   keyboardType: TextInputType.number,
                                 ),
                               ),
@@ -170,7 +184,7 @@ class _ProduccionFormPageState extends ConsumerState<ProduccionFormPage> {
                               Expanded(
                                 child: AppTextField(
                                   controller: _grandeAController,
-                                  label: 'Grande A',
+                                  label: 'AAA (67-77.9g)',
                                   keyboardType: TextInputType.number,
                                 ),
                               ),
@@ -181,16 +195,36 @@ class _ProduccionFormPageState extends ConsumerState<ProduccionFormPage> {
                             children: [
                               Expanded(
                                 child: AppTextField(
-                                  controller: _medianoController,
-                                  label: 'Mediano',
+                                  controller: _aaController,
+                                  label: 'AA (60-66.9g)',
                                   keyboardType: TextInputType.number,
                                 ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: AppTextField(
+                                  controller: _medianoController,
+                                  label: 'A (53-59.9g)',
+                                  keyboardType: TextInputType.number,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: AppTextField(
                                   controller: _pequenoController,
-                                  label: 'Pequeno',
+                                  label: 'B (46-52.9g)',
+                                  keyboardType: TextInputType.number,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: AppTextField(
+                                  controller: _cController,
+                                  label: 'C (<46g)',
                                   keyboardType: TextInputType.number,
                                 ),
                               ),
@@ -213,7 +247,10 @@ class _ProduccionFormPageState extends ConsumerState<ProduccionFormPage> {
                         children: [
                           Text(
                             'Mermas',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
                                   fontWeight: FontWeight.w700,
                                   color: AppColors.primaryDark,
                                 ),

@@ -6,6 +6,7 @@ import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/loading.dart';
+import '../../../../core/widgets/age_selector.dart';
 import '../controllers/aves_controller.dart';
 
 /// Página para registrar ingreso de aves
@@ -20,28 +21,34 @@ class IngresoFormPage extends ConsumerStatefulWidget {
 
 class _IngresoFormPageState extends ConsumerState<IngresoFormPage> {
   final _formKey = GlobalKey<FormState>();
-  final _razaController = TextEditingController();
+  final _nombreLoteController = TextEditingController();
+  late String _razaSeleccionada;
   final _cantidadController = TextEditingController();
-  final _edadController = TextEditingController();
+  late int _edadSeleccionada;
   final _pesoController = TextEditingController();
   final _observacionesController = TextEditingController();
   DateTime _fechaIngreso = DateTime.now();
 
-  final List<String> _razasSugeridas = [
-    'Hy-Line Brown',
-    'Hy-Line W-36',
-    'Lohmann LSL',
+  @override
+  void initState() {
+    super.initState();
+    _razaSeleccionada = 'Isa Brown';
+    _edadSeleccionada = 0;
+  }
+
+  static const List<String> _razas = [
+    'Isa Brown',
     'Lohmann Brown',
-    'ISA Brown',
-    'Ross 308',
-    'Cobb 500',
+    'Hy-Line Brown',
+    'Hy-Line White',
+    'Babcock B-300',
+    'Otra',
   ];
 
   @override
   void dispose() {
-    _razaController.dispose();
+    _nombreLoteController.dispose();
     _cantidadController.dispose();
-    _edadController.dispose();
     _pesoController.dispose();
     _observacionesController.dispose();
     super.dispose();
@@ -64,19 +71,21 @@ class _IngresoFormPageState extends ConsumerState<IngresoFormPage> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final success = await ref.read(avesControllerProvider.notifier).registrarIngreso(
-          galponId: widget.galponId,
-          raza: _razaController.text,
-          cantidad: int.parse(_cantidadController.text),
-          fechaIngreso: _fechaIngreso,
-          edadSemanas:
-              _edadController.text.isNotEmpty ? int.parse(_edadController.text) : 0,
-          pesoPromedio:
-              _pesoController.text.isNotEmpty ? double.parse(_pesoController.text) : null,
-          observaciones: _observacionesController.text.isNotEmpty
-              ? _observacionesController.text
-              : null,
-        );
+    final success =
+        await ref.read(avesControllerProvider.notifier).registrarIngreso(
+              galponId: widget.galponId,
+              nombreLote: _nombreLoteController.text.trim(),
+              raza: _razaSeleccionada,
+              cantidad: int.parse(_cantidadController.text),
+              fechaIngreso: _fechaIngreso,
+              edadSemanas: _edadSeleccionada,
+              pesoPromedio: _pesoController.text.isNotEmpty
+                  ? double.parse(_pesoController.text)
+                  : null,
+              observaciones: _observacionesController.text.isNotEmpty
+                  ? _observacionesController.text
+                  : null,
+            );
 
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -113,46 +122,50 @@ class _IngresoFormPageState extends ConsumerState<IngresoFormPage> {
                         children: [
                           Text(
                             'Datos principales',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
                                   fontWeight: FontWeight.w700,
                                   color: AppColors.primaryDark,
                                 ),
                           ),
                           const SizedBox(height: 12),
-                          Autocomplete<String>(
-                            optionsBuilder: (textEditingValue) {
-                              if (textEditingValue.text.isEmpty) {
-                                return _razasSugeridas;
+                          AppTextField(
+                            controller: _nombreLoteController,
+                            label: 'Nombre del lote',
+                            hint: 'Ej: Lote Abril 2026',
+                            prefixIcon: Icons.badge,
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Ingrese el nombre del lote';
                               }
-                              return _razasSugeridas.where((raza) =>
-                                  raza.toLowerCase().contains(textEditingValue.text.toLowerCase()));
-                            },
-                            onSelected: (selection) {
-                              _razaController.text = selection;
-                            },
-                            fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
-                              controller.text = _razaController.text;
-                              controller.addListener(() {
-                                _razaController.text = controller.text;
-                              });
-                              return TextFormField(
-                                controller: controller,
-                                focusNode: focusNode,
-                                decoration: const InputDecoration(
-                                  labelText: 'Raza',
-                                  hintText: 'Ej: Hy-Line Brown',
-                                  prefixIcon: Icon(Icons.pets),
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Ingrese la raza';
-                                  }
-                                  return null;
-                                },
-                              );
+                              return null;
                             },
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 16),
+                          DropdownButtonFormField<String>(
+                            value: _razaSeleccionada,
+                            decoration: const InputDecoration(
+                              labelText: 'Raza',
+                              prefixIcon: Icon(Icons.pets),
+                              border: OutlineInputBorder(),
+                            ),
+                            items: _razas
+                                .map(
+                                  (raza) => DropdownMenuItem<String>(
+                                    value: raza,
+                                    child: Text(raza),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (value) {
+                              if (value != null) {
+                                setState(() => _razaSeleccionada = value);
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 16),
                           AppTextField(
                             controller: _cantidadController,
                             label: 'Cantidad de aves',
@@ -170,9 +183,10 @@ class _IngresoFormPageState extends ConsumerState<IngresoFormPage> {
                               return null;
                             },
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 16),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               color: AppColors.surfaceVariant,
                               borderRadius: BorderRadius.circular(10),
@@ -206,26 +220,31 @@ class _IngresoFormPageState extends ConsumerState<IngresoFormPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Informacion adicional',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            'Información adicional',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
                                   fontWeight: FontWeight.w700,
                                   color: AppColors.primaryDark,
                                 ),
                           ),
                           const SizedBox(height: 12),
-                          AppTextField(
-                            controller: _edadController,
-                            label: 'Edad (semanas)',
-                            hint: 'Ej: 18 (opcional)',
-                            keyboardType: TextInputType.number,
-                            prefixIcon: Icons.timelapse,
+                          AgeSelector(
+                            initialAge: _edadSeleccionada,
+                            onAgeChanged: (age) {
+                              setState(() {
+                                _edadSeleccionada = age;
+                              });
+                            },
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 16),
                           AppTextField(
                             controller: _pesoController,
                             label: 'Peso promedio (kg)',
                             hint: 'Ej: 1.85 (opcional)',
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
                             prefixIcon: Icons.scale,
                           ),
                           const SizedBox(height: 12),

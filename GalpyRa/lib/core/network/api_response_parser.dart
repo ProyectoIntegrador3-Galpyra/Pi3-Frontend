@@ -25,14 +25,40 @@ class ApiResponseParser {
     return true;
   }
 
-  static String extractMessage(dynamic body, {String fallback = 'Operacion completada'}) {
+  static String extractMessage(dynamic body,
+      {String fallback = 'Operacion completada'}) {
     final map = asMap(body);
     final message = map['message'];
     if (message is String && message.trim().isNotEmpty) {
+      final error = map['error'];
+
+      if (error is List && error.isNotEmpty) {
+        final first = error.first;
+        final firstMap = asMap(first);
+        final field = (firstMap['field'] ?? firstMap['loc'] ?? '').toString();
+        final detail =
+            (firstMap['message'] ?? firstMap['msg'] ?? '').toString();
+        if (detail.trim().isNotEmpty) {
+          return field.trim().isNotEmpty
+              ? '$message: $field - $detail'
+              : '$message: $detail';
+        }
+      }
+
+      if (error is Map) {
+        final detail = (error['message'] ?? '').toString();
+        if (detail.trim().isNotEmpty) {
+          return '$message: $detail';
+        }
+      }
+
       return message;
     }
 
     final error = map['error'];
+    if (error is String && error.trim().isNotEmpty) {
+      return error;
+    }
     if (error is Map) {
       final errorMessage = error['message'];
       if (errorMessage is String && errorMessage.trim().isNotEmpty) {
@@ -99,7 +125,8 @@ class ApiResponseParser {
     if (exception.type == DioExceptionType.connectionError ||
         exception.response == null) {
       return ServerException(
-        message: 'No se pudo conectar con el servidor. Verifica la URL del API y que el backend este activo.',
+        message:
+            'No se pudo conectar con el servidor. Verifica la URL del API y que el backend este activo.',
         statusCode: exception.response?.statusCode,
         originalException: exception,
       );

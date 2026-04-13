@@ -1,11 +1,11 @@
 {
-    "name": "poultry_trace_app",
-    "short_name": "poultry_trace_app",
+    "name": "GALPyra",
+    "short_name": "GALPyra",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Gestion avicola y trazabilidad productiva.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

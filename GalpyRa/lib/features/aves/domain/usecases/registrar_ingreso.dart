@@ -11,6 +11,7 @@ class RegistrarIngresoUseCase {
 
   Future<Either<Failure, LoteAves>> call({
     required String galponId,
+    required String nombreLote,
     required String raza,
     required int cantidad,
     required DateTime fechaIngreso,
@@ -29,6 +30,6 @@ class RegistrarIngresoUseCase {
       observaciones: observaciones,
       createdAt: DateTime.now(),
     );
-    return _repository.registrarIngreso(lote);
+    return _repository.registrarIngreso(lote, nombreLote: nombreLote);
   }
 }

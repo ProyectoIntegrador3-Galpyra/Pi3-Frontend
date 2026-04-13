@@ -51,6 +51,8 @@ import '../../features/trazabilidad/presentation/pages/trazabilidad_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
+  final authState = ref.watch(authControllerProvider);
+
   return GoRouter(
     initialLocation: RoutePaths.home,
     debugLogDiagnostics: true,
@@ -99,17 +101,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const GalponesListPage(),
       ),
       GoRoute(
+        path: RoutePaths.galponForm,
+        name: 'galponForm',
+        builder: (context, state) => const GalponFormPage(),
+      ),
+      GoRoute(
         path: RoutePaths.galponDetail,
         name: 'galponDetail',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
           return GalponDetailPage(galponId: id);
         },
-      ),
-      GoRoute(
-        path: RoutePaths.galponForm,
-        name: 'galponForm',
-        builder: (context, state) => const GalponFormPage(),
       ),
       GoRoute(
         path: RoutePaths.galponEdit,
@@ -264,10 +266,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
     ],
     redirect: (context, state) {
-      // Obtener estado de autenticación
-      final container = ProviderScope.containerOf(context, listen: false);
-      final authState = container.read(authControllerProvider);
-
       final isLoggedIn = authState.isAuthenticated;
       final isLoginRoute = state.matchedLocation == RoutePaths.login;
 

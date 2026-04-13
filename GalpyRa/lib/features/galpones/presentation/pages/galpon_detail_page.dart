@@ -211,7 +211,7 @@ class _GalponDetailPageState extends ConsumerState<GalponDetailPage> {
                   text: 'Inventario',
                   icon: Icons.camera_alt_outlined,
                   onPressed: () {
-                    context.push(RoutePaths.captura);
+                    context.push(RoutePaths.capturaPath(galpon.id));
                   },
                   type: AppButtonType.outline,
                 ),
@@ -222,7 +222,7 @@ class _GalponDetailPageState extends ConsumerState<GalponDetailPage> {
                   text: 'Producción',
                   icon: Icons.egg_outlined,
                   onPressed: () {
-                    context.push(RoutePaths.produccionForm);
+                    context.push(RoutePaths.produccionFormPath(galpon.id));
                   },
                   type: AppButtonType.outline,
                 ),
@@ -237,7 +237,7 @@ class _GalponDetailPageState extends ConsumerState<GalponDetailPage> {
                   text: 'Sanidad',
                   icon: Icons.medical_services_outlined,
                   onPressed: () {
-                    context.push(RoutePaths.sanidadForm);
+                    context.push(RoutePaths.sanidadFormPath(galpon.id));
                   },
                   type: AppButtonType.outline,
                 ),
@@ -248,7 +248,7 @@ class _GalponDetailPageState extends ConsumerState<GalponDetailPage> {
                   text: 'Alimentación',
                   icon: Icons.restaurant_outlined,
                   onPressed: () {
-                    context.push(RoutePaths.alimentacionForm);
+                    context.push(RoutePaths.alimentacionFormPath(galpon.id));
                   },
                   type: AppButtonType.outline,
                 ),

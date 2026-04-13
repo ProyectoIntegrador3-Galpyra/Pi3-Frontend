@@ -29,7 +29,8 @@ class ProduccionHuevosModel extends ProduccionHuevos {
       galponId: json['galpon_id'] as String,
       loteId: json['lote_id'] as String?,
       fecha: DateTime.parse(json['fecha'] as String),
-      cantidadTotal: json['cantidad_total'] as int,
+      // Backend sends 'cantidad'; accept both for compatibility.
+      cantidadTotal: (json['cantidad_total'] as int?) ?? (json['cantidad'] as int? ?? 0),
       huevosRotos: json['huevos_rotos'] as int? ?? 0,
       huevosSucios: json['huevos_sucios'] as int? ?? 0,
       huevosGrandeAA: json['huevos_grande_aa'] as int? ?? 0,
@@ -49,27 +50,6 @@ class ProduccionHuevosModel extends ProduccionHuevos {
           ? DateTime.parse(json['deleted_at'] as String)
           : null,
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'galpon_id': galponId,
-      'lote_id': loteId,
-      'fecha': fecha.toIso8601String(),
-      'cantidad_total': cantidadTotal,
-      'huevos_rotos': huevosRotos,
-      'huevos_sucios': huevosSucios,
-      'huevos_grande_aa': huevosGrandeAA,
-      'huevos_grande_a': huevosGrandeA,
-      'huevos_mediano': huevosMediano,
-      'huevos_pequeno': huevosPequeno,
-      'porcentaje_postura': porcentajePostura,
-      'observaciones': observaciones,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
-      if (deletedAt != null) 'deleted_at': deletedAt!.toIso8601String(),
-    };
   }
 
   factory ProduccionHuevosModel.fromEntity(ProduccionHuevos entity) {
@@ -92,6 +72,28 @@ class ProduccionHuevosModel extends ProduccionHuevos {
       updatedAt: entity.updatedAt,
       deletedAt: entity.deletedAt,
     );
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'galpon_id': galponId,
+      'lote_id': loteId,
+      'fecha': fecha.toIso8601String(),
+      'cantidad_total': cantidadTotal,
+      'huevos_rotos': huevosRotos,
+      'huevos_sucios': huevosSucios,
+      'huevos_grande_aa': huevosGrandeAA,
+      'huevos_grande_a': huevosGrandeA,
+      'huevos_mediano': huevosMediano,
+      'huevos_pequeno': huevosPequeno,
+      'porcentaje_postura': porcentajePostura,
+      'observaciones': observaciones,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
+      if (deletedAt != null) 'deleted_at': deletedAt!.toIso8601String(),
+    };
   }
 
   ProduccionHuevos toEntity() {

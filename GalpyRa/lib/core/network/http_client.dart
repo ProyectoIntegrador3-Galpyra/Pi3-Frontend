@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import '../../config/env.dart';
 import 'interceptors.dart';
@@ -16,7 +17,6 @@ class HttpClient {
         receiveTimeout: Duration(milliseconds: Env.apiTimeout),
         sendTimeout: Duration(milliseconds: Env.apiTimeout),
         headers: {
-          'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
       ),
@@ -114,7 +114,7 @@ class HttpClient {
     );
   }
 
-  /// Upload file with multipart
+  /// Upload file with multipart (mobile/desktop — uses dart:io)
   Future<Response<T>> uploadFile<T>(
     String path, {
     required String filePath,
@@ -131,6 +131,31 @@ class HttpClient {
     return _dio.post<T>(
       path,
       data: formData,
+      options: Options(contentType: Headers.multipartFormDataContentType),
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+    );
+  }
+
+  /// Upload file from bytes (web-compatible)
+  Future<Response<T>> uploadFileBytes<T>(
+    String path, {
+    required Uint8List bytes,
+    required String filename,
+    required String fieldName,
+    Map<String, dynamic>? extraData,
+    CancelToken? cancelToken,
+    void Function(int, int)? onSendProgress,
+  }) async {
+    final formData = FormData.fromMap({
+      fieldName: MultipartFile.fromBytes(bytes, filename: filename),
+      ...?extraData,
+    });
+
+    return _dio.post<T>(
+      path,
+      data: formData,
+      options: Options(contentType: Headers.multipartFormDataContentType),
       cancelToken: cancelToken,
       onSendProgress: onSendProgress,
     );

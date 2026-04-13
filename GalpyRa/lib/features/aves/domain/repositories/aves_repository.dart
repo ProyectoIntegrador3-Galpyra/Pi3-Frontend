@@ -12,5 +12,8 @@ abstract class AvesRepository {
     required DateTime fecha,
     String? observaciones,
   });
-  Future<Either<Failure, LoteAves>> registrarIngreso(LoteAves lote);
+  Future<Either<Failure, LoteAves>> registrarIngreso(
+    LoteAves lote, {
+    String? nombreLote,
+  });
 }

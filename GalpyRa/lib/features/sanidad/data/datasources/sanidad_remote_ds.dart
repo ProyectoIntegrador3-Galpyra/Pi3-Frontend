@@ -33,11 +33,45 @@ abstract class SanidadRemoteDataSource {
   Future<Map<String, dynamic>> obtenerResumen(String galponId);
 }
 
+/// Mapeo de enum frontend → valor string que espera el backend.
+String _tipoToBackend(TipoEventoSanitario tipo) {
+  switch (tipo) {
+    case TipoEventoSanitario.vacunacion:
+      return 'VACUNACION';
+    case TipoEventoSanitario.tratamiento:
+      return 'TRATAMIENTO';
+    case TipoEventoSanitario.inspeccion:
+      return 'INSPECCION';
+    case TipoEventoSanitario.cuarentena:
+      // Backend no tiene cuarentena; DIAGNOSTICO es el más cercano.
+      return 'DIAGNOSTICO';
+    case TipoEventoSanitario.desparasitacion:
+      return 'TRATAMIENTO';
+  }
+}
+
 /// Implementación del data source remoto
 class SanidadRemoteDataSourceImpl implements SanidadRemoteDataSource {
   final HttpClient _httpClient;
 
   SanidadRemoteDataSourceImpl(this._httpClient);
+
+  /// Obtiene el ID del primer lote del galpón (requerido por el backend para eventos sanitarios).
+  Future<String> _getActiveLoteId(String galponId) async {
+    final response = await _httpClient.get(ApiEndpoints.avesByGalpon(galponId));
+    final list = ApiResponseParser.extractDataList(response.data);
+    if (list.isEmpty) {
+      throw const ServerException(
+        message: 'No hay lotes registrados para este galpon. Registra un ingreso de aves primero.',
+      );
+    }
+    final lote = ApiResponseParser.asMap(list.first);
+    final id = lote['id']?.toString() ?? '';
+    if (id.isEmpty) {
+      throw const ServerException(message: 'Lote sin ID valido en el servidor.');
+    }
+    return id;
+  }
 
   @override
   Future<List<RegistroSanitarioModel>> obtenerHistorial(
@@ -47,23 +81,38 @@ class SanidadRemoteDataSourceImpl implements SanidadRemoteDataSource {
     DateTime? hasta,
   }) async {
     try {
-      final response = await _httpClient.get(
-        ApiEndpoints.sanidadByGalpon(galponId),
-        queryParameters: {
-          if (tipo != null) 'tipo': tipo.name,
-          if (desde != null) 'fecha_inicio': desde.toIso8601String(),
-          if (hasta != null) 'fecha_fin': hasta.toIso8601String(),
-        },
-      );
+      // Backend GET /api/sanidad no soporta filtro por galpon_id vía query params;
+      // se filtra localmente por galpon_id después de recibir la respuesta.
+      final response = await _httpClient.get(ApiEndpoints.sanidad);
 
       final list = ApiResponseParser.extractDataList(response.data);
-      if (list.isNotEmpty) {
-        return list
-            .map((item) => RegistroSanitarioModel.fromJson(ApiResponseParser.asMap(item)))
+      if (list.isEmpty) return <RegistroSanitarioModel>[];
+
+      var registros = list
+          .map((item) => ApiResponseParser.asMap(item))
+          .where((m) => m['galpon_id']?.toString() == galponId)
+          .map((m) => RegistroSanitarioModel.fromJson(m))
+          .toList();
+
+      if (tipo != null) {
+        final tipoBackend = _tipoToBackend(tipo).toLowerCase();
+        registros = registros
+            .where(
+              (r) =>
+                  r.tipo.name.toLowerCase() == tipoBackend ||
+                  _tipoToBackend(r.tipo).toLowerCase() == tipoBackend,
+            )
             .toList();
       }
 
-      return <RegistroSanitarioModel>[];
+      if (desde != null) {
+        registros = registros.where((r) => !r.fecha.isBefore(desde)).toList();
+      }
+      if (hasta != null) {
+        registros = registros.where((r) => !r.fecha.isAfter(hasta)).toList();
+      }
+
+      return registros;
     } on DioException catch (e) {
       throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al obtener historial sanitario');
     }
@@ -83,19 +132,24 @@ class SanidadRemoteDataSourceImpl implements SanidadRemoteDataSource {
     String? observaciones,
   }) async {
     try {
+      // Backend requires lote_id; fetch the active lote for this galpon.
+      final loteId = await _getActiveLoteId(galponId);
+
       final response = await _httpClient.post(
         ApiEndpoints.sanidad,
         data: {
+          'lote_id': loteId,
           'galpon_id': galponId,
-          'tipo': tipo.name,
-          'fecha': fecha.toIso8601String(),
+          // Backend field is 'tipo_evento' with UPPERCASE enum values.
+          'tipo_evento': _tipoToBackend(tipo),
           'descripcion': descripcion,
-          if (medicamento != null && medicamento.isNotEmpty) 'medicamento': medicamento,
-          if (dosis != null && dosis.isNotEmpty) 'dosis': dosis,
-          if (veterinario != null && veterinario.isNotEmpty) 'veterinario': veterinario,
-          if (avesAfectadas != null) 'aves_afectadas': avesAfectadas,
-          if (fechaProximaAplicacion != null)
-            'fecha_proxima_aplicacion': fechaProximaAplicacion.toIso8601String(),
+          // Backend requires 'producto' (maps to frontend's medicamento).
+          'producto': medicamento ?? '',
+          // Backend requires 'dosis'.
+          'dosis': dosis ?? '',
+          // Backend requires 'responsable' (maps to frontend's veterinario).
+          'responsable': veterinario ?? '',
+          'fecha': fecha.toIso8601String().split('T').first,
           if (observaciones != null && observaciones.isNotEmpty) 'observaciones': observaciones,
         },
       );
@@ -113,19 +167,21 @@ class SanidadRemoteDataSourceImpl implements SanidadRemoteDataSource {
   @override
   Future<List<RegistroSanitarioModel>> obtenerPendientes() async {
     try {
-      final response = await _httpClient.get(
-        ApiEndpoints.sanidad,
-        queryParameters: {'pendientes': true},
-      );
+      // Backend no soporta filtro ?pendientes=true; devuelve todos y filtra localmente.
+      final response = await _httpClient.get(ApiEndpoints.sanidad);
 
       final list = ApiResponseParser.extractDataList(response.data);
-      if (list.isNotEmpty) {
-        return list
-            .map((item) => RegistroSanitarioModel.fromJson(ApiResponseParser.asMap(item)))
-            .toList();
-      }
+      if (list.isEmpty) return <RegistroSanitarioModel>[];
 
-      return <RegistroSanitarioModel>[];
+      final now = DateTime.now();
+      return list
+          .map((item) => RegistroSanitarioModel.fromJson(ApiResponseParser.asMap(item)))
+          .where(
+            (r) =>
+                r.fechaProximaAplicacion != null &&
+                r.fechaProximaAplicacion!.isAfter(now),
+          )
+          .toList();
     } on DioException catch (e) {
       throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al obtener pendientes sanitarios');
     }
@@ -134,13 +190,10 @@ class SanidadRemoteDataSourceImpl implements SanidadRemoteDataSource {
   @override
   Future<Map<String, dynamic>> obtenerResumen(String galponId) async {
     try {
-      final response = await _httpClient.get(
-        ApiEndpoints.sanidadByGalpon(galponId),
-        queryParameters: {'resumen': true},
-      );
-      return ApiResponseParser.extractDataMap(response.data);
-    } on DioException catch (e) {
-      throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al obtener resumen sanitario');
+      // Backend no tiene endpoint de resumen por galpon; devuelve vacío.
+      return <String, dynamic>{};
+    } catch (e) {
+      return <String, dynamic>{};
     }
   }
 }

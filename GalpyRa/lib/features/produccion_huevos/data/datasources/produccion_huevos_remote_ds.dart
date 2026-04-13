@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 
 import '../../../../config/constants/api_endpoints.dart';
-import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/api_response_parser.dart';
 import '../../../../core/network/http_client.dart';
 import '../models/produccion_huevos_model.dart';
@@ -88,14 +87,10 @@ class ProduccionHuevosRemoteDataSourceImpl implements ProduccionHuevosRemoteData
         ApiEndpoints.produccion,
         data: {
           'galpon_id': galponId,
-          'fecha': fecha.toIso8601String(),
-          'cantidad_total': cantidadTotal,
+          'fecha': fecha.toIso8601String().split('T').first,
+          // Backend field is 'cantidad'; classification fields are stored locally only.
+          'cantidad': cantidadTotal,
           'huevos_rotos': huevosRotos,
-          'huevos_sucios': huevosSucios,
-          'huevos_grande_aa': huevosGrandeAA,
-          'huevos_grande_a': huevosGrandeA,
-          'huevos_mediano': huevosMediano,
-          'huevos_pequeno': huevosPequeno,
           if (observaciones != null && observaciones.isNotEmpty) 'observaciones': observaciones,
         },
       );

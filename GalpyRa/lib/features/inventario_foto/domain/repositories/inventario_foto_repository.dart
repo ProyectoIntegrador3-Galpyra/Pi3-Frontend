@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failure.dart';
 import '../entities/conteo_foto.dart';
@@ -7,7 +8,8 @@ abstract class InventarioFotoRepository {
   /// Procesar imagen para conteo automático
   Future<Either<Failure, ConteoFoto>> procesarImagen({
     required String galponId,
-    required String imagePath,
+    required Uint8List imageBytes,
+    required String imageFilename,
   });
 
   /// Actualizar conteo manual después de revisión

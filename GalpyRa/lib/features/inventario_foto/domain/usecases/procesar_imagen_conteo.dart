@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failure.dart';
 import '../entities/conteo_foto.dart';
@@ -11,11 +12,13 @@ class ProcesarImagenConteoUseCase {
 
   Future<Either<Failure, ConteoFoto>> call({
     required String galponId,
-    required String imagePath,
+    required Uint8List imageBytes,
+    required String imageFilename,
   }) {
     return _repository.procesarImagen(
       galponId: galponId,
-      imagePath: imagePath,
+      imageBytes: imageBytes,
+      imageFilename: imageFilename,
     );
   }
 }

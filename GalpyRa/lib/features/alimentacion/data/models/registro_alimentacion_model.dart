@@ -27,15 +27,40 @@ class RegistroAlimentacionModel extends RegistroAlimentacion {
         (e) => e.name == json['tipo_alimento'],
         orElse: () => TipoAlimento.otro,
       ),
-      nombreAlimento: json['nombre_alimento'] as String,
-      cantidadKg: (json['cantidad_kg'] as num).toDouble(),
-      costoUnitario: (json['costo_unitario'] as num?)?.toDouble(),
+      // Backend may not return nombre_alimento; fallback to tipo_alimento name.
+      nombreAlimento: (json['nombre_alimento'] as String?) ??
+          (json['tipo_alimento'] as String?) ??
+          '',
+      cantidadKg: (json['cantidad_kg'] as num? ?? 0).toDouble(),
+      // Backend returns 'costo'; frontend model uses 'costo_unitario'.
+      costoUnitario: (json['costo_unitario'] as num?)?.toDouble() ??
+          (json['costo'] as num?)?.toDouble(),
       numeroAves: json['numero_aves'] as int?,
       consumoPorAve: (json['consumo_por_ave'] as num?)?.toDouble(),
       loteAlimento: json['lote_alimento'] as String?,
       proveedor: json['proveedor'] as String?,
       observaciones: json['observaciones'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : DateTime.now(),
+    );
+  }
+
+  factory RegistroAlimentacionModel.fromEntity(RegistroAlimentacion entity) {
+    return RegistroAlimentacionModel(
+      id: entity.id,
+      galponId: entity.galponId,
+      fecha: entity.fecha,
+      tipoAlimento: entity.tipoAlimento,
+      nombreAlimento: entity.nombreAlimento,
+      cantidadKg: entity.cantidadKg,
+      costoUnitario: entity.costoUnitario,
+      numeroAves: entity.numeroAves,
+      consumoPorAve: entity.consumoPorAve,
+      loteAlimento: entity.loteAlimento,
+      proveedor: entity.proveedor,
+      observaciones: entity.observaciones,
+      createdAt: entity.createdAt,
     );
   }
 
@@ -55,24 +80,6 @@ class RegistroAlimentacionModel extends RegistroAlimentacion {
       'observaciones': observaciones,
       'created_at': createdAt.toIso8601String(),
     };
-  }
-
-  factory RegistroAlimentacionModel.fromEntity(RegistroAlimentacion entity) {
-    return RegistroAlimentacionModel(
-      id: entity.id,
-      galponId: entity.galponId,
-      fecha: entity.fecha,
-      tipoAlimento: entity.tipoAlimento,
-      nombreAlimento: entity.nombreAlimento,
-      cantidadKg: entity.cantidadKg,
-      costoUnitario: entity.costoUnitario,
-      numeroAves: entity.numeroAves,
-      consumoPorAve: entity.consumoPorAve,
-      loteAlimento: entity.loteAlimento,
-      proveedor: entity.proveedor,
-      observaciones: entity.observaciones,
-      createdAt: entity.createdAt,
-    );
   }
 
   RegistroAlimentacion toEntity() {

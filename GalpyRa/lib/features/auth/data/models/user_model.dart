@@ -15,16 +15,32 @@ class UserModel extends User {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    final id = (json['id'] ?? '').toString();
+    final email = (json['email'] ?? '').toString();
+    final name = (json['name'] ?? json['nombre'] ?? '').toString();
+    final roleValue = (json['role'] ?? json['rol'] ?? '').toString();
+
+    if (id.isEmpty || email.isEmpty || name.isEmpty) {
+      throw const FormatException('Respuesta de usuario incompleta');
+    }
+
+    final createdAtRaw = json['created_at'] ?? json['createdAt'];
+    final createdAt = createdAtRaw is String && createdAtRaw.isNotEmpty
+        ? DateTime.parse(createdAtRaw)
+        : DateTime.now();
+
+    final updatedAtRaw = json['updated_at'] ?? json['updatedAt'];
+
     return UserModel(
-      id: json['id'] as String,
-      email: json['email'] as String,
-      name: json['name'] as String,
+      id: id,
+      email: email,
+      name: name,
       phone: json['phone'] as String?,
-      role: UserRoleExtension.fromString(json['role'] as String),
+      role: UserRoleExtension.fromString(roleValue),
       avatarUrl: json['avatar_url'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'] as String)
+      createdAt: createdAt,
+      updatedAt: updatedAtRaw is String && updatedAtRaw.isNotEmpty
+          ? DateTime.parse(updatedAtRaw)
           : null,
     );
   }

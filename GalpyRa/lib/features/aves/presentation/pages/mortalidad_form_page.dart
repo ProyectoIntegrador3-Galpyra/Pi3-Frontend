@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../config/theme/colors.dart';
 import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
@@ -26,11 +27,10 @@ class _MortalidadFormPageState extends ConsumerState<MortalidadFormPage> {
 
   final List<String> _causas = [
     'Enfermedad',
-    'Asfixia',
+    'Accidente/Trauma',
     'Depredador',
-    'Accidente',
-    'Edad avanzada',
-    'Desconocida',
+    'Calor/Estrés',
+    'Causa desconocida',
     'Otra',
   ];
 
@@ -58,15 +58,16 @@ class _MortalidadFormPageState extends ConsumerState<MortalidadFormPage> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final success = await ref.read(avesControllerProvider.notifier).registrarMortalidad(
-          galponId: widget.galponId,
-          cantidad: int.parse(_cantidadController.text),
-          causa: _causaSeleccionada,
-          fecha: _fechaSeleccionada,
-          observaciones: _observacionesController.text.isNotEmpty
-              ? _observacionesController.text
-              : null,
-        );
+    final success =
+        await ref.read(avesControllerProvider.notifier).registrarMortalidad(
+              galponId: widget.galponId,
+              cantidad: int.parse(_cantidadController.text),
+              causa: _causaSeleccionada,
+              fecha: _fechaSeleccionada,
+              observaciones: _observacionesController.text.isNotEmpty
+                  ? _observacionesController.text
+                  : null,
+            );
 
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -91,73 +92,166 @@ class _MortalidadFormPageState extends ConsumerState<MortalidadFormPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Cantidad
-                    AppTextField(
-                      controller: _cantidadController,
-                      label: 'Cantidad de aves',
-                      hint: 'Ej: 5',
-                      keyboardType: TextInputType.number,
-                      prefixIcon: Icons.numbers,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Ingrese la cantidad';
-                        }
-                        final cantidad = int.tryParse(value);
-                        if (cantidad == null || cantidad <= 0) {
-                          return 'Ingrese un número válido';
-                        }
-                        return null;
-                      },
+                    // Info card
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                            color: Colors.red.withOpacity(0.3), width: 1),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.warning_rounded,
+                              color: Colors.red.shade700, size: 20),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Registra mortalidad para mantener actualizado tu inventario',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: Colors.red.shade700,
+                                  ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Main data section
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Datos del evento',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.primaryDark,
+                                ),
+                          ),
+                          const SizedBox(height: 12),
+                          // Cantidad
+                          AppTextField(
+                            controller: _cantidadController,
+                            label: 'Cantidad de aves fallecidas',
+                            hint: 'Ej: 5',
+                            keyboardType: TextInputType.number,
+                            prefixIcon: Icons.numbers,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Ingrese la cantidad';
+                              }
+                              final cantidad = int.tryParse(value);
+                              if (cantidad == null || cantidad <= 0) {
+                                return 'Ingrese un número válido';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 14),
+
+                          // Causa
+                          DropdownButtonFormField<String>(
+                            value: _causaSeleccionada,
+                            decoration: InputDecoration(
+                              labelText: 'Causa de mortalidad',
+                              prefixIcon:
+                                  const Icon(Icons.report_problem_outlined),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              filled: true,
+                              fillColor:
+                                  AppColors.surfaceVariant.withOpacity(0.3),
+                            ),
+                            items: _causas
+                                .map((causa) => DropdownMenuItem(
+                                      value: causa,
+                                      child: Text(causa),
+                                    ))
+                                .toList(),
+                            onChanged: (value) {
+                              if (value != null) {
+                                setState(() {
+                                  _causaSeleccionada = value;
+                                });
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 14),
+
+                          // Fecha
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceVariant,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: const Icon(Icons.calendar_today),
+                              title: const Text('Fecha del evento'),
+                              subtitle: Text(
+                                '${_fechaSeleccionada.day}/${_fechaSeleccionada.month}/${_fechaSeleccionada.year}',
+                              ),
+                              trailing: TextButton(
+                                onPressed: _selectDate,
+                                child: const Text('Cambiar'),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 16),
 
-                    // Causa
-                    DropdownButtonFormField<String>(
-                      value: _causaSeleccionada,
-                      decoration: const InputDecoration(
-                        labelText: 'Causa de mortalidad',
-                        prefixIcon: Icon(Icons.report_problem_outlined),
-                        border: OutlineInputBorder(),
+                    // Additional info section
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.border),
                       ),
-                      items: _causas
-                          .map((causa) => DropdownMenuItem(
-                                value: causa,
-                                child: Text(causa),
-                              ))
-                          .toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() {
-                            _causaSeleccionada = value;
-                          });
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Fecha
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.calendar_today),
-                      title: const Text('Fecha'),
-                      subtitle: Text(
-                        '${_fechaSeleccionada.day}/${_fechaSeleccionada.month}/${_fechaSeleccionada.year}',
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Información adicional',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.primaryDark,
+                                ),
+                          ),
+                          const SizedBox(height: 12),
+                          // Observaciones
+                          AppTextField(
+                            controller: _observacionesController,
+                            label: 'Observaciones',
+                            hint: 'Detalles adicionales (opcional)',
+                            maxLines: 3,
+                            prefixIcon: Icons.notes,
+                          ),
+                        ],
                       ),
-                      trailing: TextButton(
-                        onPressed: _selectDate,
-                        child: const Text('Cambiar'),
-                      ),
-                    ),
-                    const Divider(),
-                    const SizedBox(height: 16),
-
-                    // Observaciones
-                    AppTextField(
-                      controller: _observacionesController,
-                      label: 'Observaciones',
-                      hint: 'Detalles adicionales (opcional)',
-                      maxLines: 3,
-                      prefixIcon: Icons.notes,
                     ),
                     const SizedBox(height: 24),
 

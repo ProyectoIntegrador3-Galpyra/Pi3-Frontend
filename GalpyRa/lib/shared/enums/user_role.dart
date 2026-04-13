@@ -28,8 +28,9 @@ extension UserRoleExtension on UserRole {
   }
 
   static UserRole fromString(String value) {
+    final normalized = value.trim().toLowerCase();
     return UserRole.values.firstWhere(
-      (role) => role.name == value,
+      (role) => role.name == normalized,
       orElse: () => UserRole.viewer,
     );
   }

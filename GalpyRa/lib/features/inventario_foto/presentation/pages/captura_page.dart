@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -21,13 +21,33 @@ class CapturaPage extends ConsumerStatefulWidget {
 
 class _CapturaPageState extends ConsumerState<CapturaPage> {
   final ImagePicker _picker = ImagePicker();
+  // Guardamos los bytes para que Image.memory funcione en web y móvil
+  Uint8List? _imageBytes;
   String? _imagePath;
   bool _isCapturing = false;
 
   @override
   void initState() {
     super.initState();
-    ref.read(inventarioFotoControllerProvider.notifier).setGalponId(widget.galponId);
+    Future.microtask(() {
+      ref
+          .read(inventarioFotoControllerProvider.notifier)
+          .setGalponId(widget.galponId);
+    });
+  }
+
+  Future<void> _setImage(XFile file) async {
+    final bytes = await file.readAsBytes();
+    final filename = file.name.isNotEmpty ? file.name : 'inventario.jpg';
+    setState(() {
+      _imageBytes = bytes;
+      _imagePath = file.path;
+    });
+    ref.read(inventarioFotoControllerProvider.notifier).setImageData(
+          file.path,
+          bytes,
+          filename,
+        );
   }
 
   Future<void> _captureFromCamera() async {
@@ -41,12 +61,7 @@ class _CapturaPageState extends ConsumerState<CapturaPage> {
         maxHeight: 1080,
       );
 
-      if (photo != null) {
-        setState(() {
-          _imagePath = photo.path;
-        });
-        ref.read(inventarioFotoControllerProvider.notifier).setImagePath(photo.path);
-      }
+      if (photo != null) await _setImage(photo);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -69,12 +84,7 @@ class _CapturaPageState extends ConsumerState<CapturaPage> {
         maxHeight: 1080,
       );
 
-      if (image != null) {
-        setState(() {
-          _imagePath = image.path;
-        });
-        ref.read(inventarioFotoControllerProvider.notifier).setImagePath(image.path);
-      }
+      if (image != null) await _setImage(image);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -89,12 +99,15 @@ class _CapturaPageState extends ConsumerState<CapturaPage> {
   Future<void> _procesarImagen() async {
     if (_imagePath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Capture o seleccione una imagen primero')),
+        const SnackBar(
+            content: Text('Capture o seleccione una imagen primero')),
       );
       return;
     }
 
-    final success = await ref.read(inventarioFotoControllerProvider.notifier).procesarImagen();
+    final success = await ref
+        .read(inventarioFotoControllerProvider.notifier)
+        .procesarImagen();
 
     if (success && mounted) {
       context.push(RoutePaths.revisionConteoPath(widget.galponId));
@@ -175,24 +188,28 @@ class _CapturaPageState extends ConsumerState<CapturaPage> {
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.grey[300]!),
                     ),
-                    child: _imagePath != null
+                    child: _imageBytes != null
                         ? Stack(
                             fit: StackFit.expand,
                             children: [
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
-                                child: Image.file(
-                                  File(_imagePath!),
-                                  fit: BoxFit.cover,
-                                ),
+                                // Image.memory funciona en web y móvil sin dart:io
+                                child: Image.memory(_imageBytes!,
+                                    fit: BoxFit.cover),
                               ),
                               Positioned(
                                 top: 8,
                                 right: 8,
                                 child: IconButton(
                                   onPressed: () {
-                                    setState(() => _imagePath = null);
-                                    ref.read(inventarioFotoControllerProvider.notifier)
+                                    setState(() {
+                                      _imageBytes = null;
+                                      _imagePath = null;
+                                    });
+                                    ref
+                                        .read(inventarioFotoControllerProvider
+                                            .notifier)
                                         .reiniciarConteo();
                                   },
                                   icon: const Icon(Icons.close),

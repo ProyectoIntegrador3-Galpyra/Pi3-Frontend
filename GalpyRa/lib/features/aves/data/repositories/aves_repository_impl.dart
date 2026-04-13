@@ -14,7 +14,8 @@ class AvesRepositoryImpl implements AvesRepository {
   AvesRepositoryImpl(this._remoteDataSource, this._localDataSource);
 
   @override
-  Future<Either<Failure, List<LoteAves>>> consultarInventario(String? galponId) async {
+  Future<Either<Failure, List<LoteAves>>> consultarInventario(
+      String? galponId) async {
     if (galponId == null) {
       return const Left(ValidationFailure(message: 'ID de galpón requerido'));
     }
@@ -73,10 +74,14 @@ class AvesRepositoryImpl implements AvesRepository {
   }
 
   @override
-  Future<Either<Failure, LoteAves>> registrarIngreso(LoteAves lote) async {
+  Future<Either<Failure, LoteAves>> registrarIngreso(
+    LoteAves lote, {
+    String? nombreLote,
+  }) async {
     try {
       final result = await _remoteDataSource.registrarIngreso(
         galponId: lote.galponId,
+        nombreLote: nombreLote,
         raza: lote.raza ?? '',
         cantidad: lote.cantidad,
         fechaIngreso: lote.fechaIngreso,

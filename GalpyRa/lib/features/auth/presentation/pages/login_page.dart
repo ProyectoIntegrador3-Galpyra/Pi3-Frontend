@@ -30,10 +30,24 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   Future<void> _handleLogin() async {
+    if (ref.read(authControllerProvider).isLoading) return;
+
+    ref.read(authControllerProvider.notifier).clearError();
+
     if (_formKey.currentState?.validate() ?? false) {
+      final normalizedEmail = _emailController.text.trim().replaceFirst(
+            RegExp(r'\.+$'),
+            '',
+          );
+      final normalizedPassword = _passwordController.text.trim();
+
+      if (normalizedEmail != _emailController.text) {
+        _emailController.text = normalizedEmail;
+      }
+
       final success = await ref.read(authControllerProvider.notifier).login(
-            _emailController.text.trim(),
-            _passwordController.text,
+            normalizedEmail,
+        normalizedPassword,
           );
 
       if (success && mounted) {
@@ -80,7 +94,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        'Poultry Trace',
+                        'GALPyra',
                         style: theme.textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.w700,
                           color: AppColors.textOnPrimary,
@@ -89,7 +103,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'Control avícola claro y confiable',
+                        'Gestión Avícola y Trazabilidad Productiva',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: AppColors.textOnPrimary.withOpacity(0.9),
                         ),

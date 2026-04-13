@@ -11,11 +11,14 @@ class Env {
 
   /// Base URL for API calls
   static const String baseUrl =
-    String.fromEnvironment('API_BASE_URL', defaultValue: 'https://api.poultrytrace.com');
+    String.fromEnvironment(
+      'API_BASE_URL',
+      defaultValue: 'http://galpyra-1776052294.us-east-2.elasticbeanstalk.com',
+    );
 
   /// Development base URL
   static const String devBaseUrl =
-    String.fromEnvironment('API_DEV_BASE_URL', defaultValue: 'http://localhost:3000');
+    String.fromEnvironment('API_DEV_BASE_URL', defaultValue: 'http://127.0.0.1:8000');
 
   /// Current environment
   static bool get isProduction =>

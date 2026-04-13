@@ -52,6 +52,8 @@ class AuthController extends StateNotifier<AuthState> {
 
   /// Login with email and password
   Future<bool> login(String email, String password) async {
+    if (state.isLoading) return false;
+
     state = state.copyWith(isLoading: true, error: null);
 
     final result = await _loginUseCase(email: email, password: password);

@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:dio/dio.dart';
 
 import '../../../../config/constants/api_endpoints.dart';
@@ -11,7 +12,8 @@ import '../models/conteo_foto_model.dart';
 abstract class InventarioFotoRemoteDataSource {
   Future<ConteoFotoModel> procesarImagen({
     required String galponId,
-    required String imagePath,
+    required Uint8List imageBytes,
+    required String imageFilename,
   });
 
   Future<ConteoFotoModel> actualizarConteo({
@@ -31,18 +33,26 @@ abstract class InventarioFotoRemoteDataSource {
 }
 
 /// Implementación del data source remoto
-class InventarioFotoRemoteDataSourceImpl implements InventarioFotoRemoteDataSource {
+class InventarioFotoRemoteDataSourceImpl
+    implements InventarioFotoRemoteDataSource {
   final HttpClient _httpClient;
 
   InventarioFotoRemoteDataSourceImpl(this._httpClient);
 
-  ConteoFotoModel _mapJobToConteo(Map<String, dynamic> job) {
-    final estadoRaw = (job['estado'] ?? job['status'] ?? 'pendiente').toString().toLowerCase();
+  ConteoFotoModel _mapJobToConteo(
+    Map<String, dynamic> job, {
+    String? fallbackGalponId,
+  }) {
+    final estadoRaw = (job['estado'] ?? job['status'] ?? 'pendiente')
+        .toString()
+        .toLowerCase();
     EstadoConteo estado;
     switch (estadoRaw) {
       case 'completado':
       case 'completed':
       case 'done':
+      case 'procesado':
+      case 'processed':
         estado = EstadoConteo.completado;
         break;
       case 'procesando':
@@ -59,15 +69,24 @@ class InventarioFotoRemoteDataSourceImpl implements InventarioFotoRemoteDataSour
         estado = EstadoConteo.pendiente;
     }
 
-    final createdAtRaw = (job['created_at'] ?? job['fecha_captura'] ?? DateTime.now().toIso8601String()).toString();
+    final createdAtRaw = (job['created_at'] ??
+            job['fecha_captura'] ??
+            DateTime.now().toIso8601String())
+        .toString();
     final fechaCaptura = DateTime.tryParse(createdAtRaw) ?? DateTime.now();
-    final conteoAutomatico = (job['conteo_automatico'] ?? job['conteo_detectado']) as num?;
-    final conteoManual = (job['conteo_manual'] ?? job['conteo_confirmado']) as num?;
+    final conteoAutomatico = (job['conteo_automatico'] ??
+        job['conteo_detectado'] ??
+        job['conteo_estimado'] ??
+        job['conteo']) as num?;
+    final conteoManual =
+        (job['conteo_manual'] ?? job['conteo_confirmado']) as num?;
 
     return ConteoFotoModel(
       id: (job['job_id'] ?? job['id'] ?? '').toString(),
-      galponId: (job['galpon_id'] ?? '').toString(),
-      imagePath: (job['imagen_url'] ?? job['image_path'] ?? '').toString(),
+      galponId: (job['galpon_id'] ?? fallbackGalponId ?? '').toString(),
+      imagePath:
+          (job['imagen_url'] ?? job['image_url'] ?? job['image_path'] ?? '')
+              .toString(),
       fechaCaptura: fechaCaptura,
       estado: estado,
       conteoAutomatico: conteoAutomatico?.toInt(),
@@ -75,7 +94,12 @@ class InventarioFotoRemoteDataSourceImpl implements InventarioFotoRemoteDataSour
       conteoFinal: (job['conteo_final'] as num?)?.toInt(),
       confianza: (job['confianza'] as num?)?.toDouble(),
       mensajeError: job['error']?.toString(),
-      metadatos: ApiResponseParser.asMap(job['detalles'] ?? job['metadatos']),
+      metadatos: {
+        ...ApiResponseParser.asMap(job['detalles'] ?? job['metadatos']),
+        if (job['bounding_boxes'] != null)
+          'bounding_boxes': job['bounding_boxes'],
+        if (job['modo'] != null) 'modo': job['modo'],
+      },
       createdAt: fechaCaptura,
     );
   }
@@ -83,23 +107,27 @@ class InventarioFotoRemoteDataSourceImpl implements InventarioFotoRemoteDataSour
   @override
   Future<ConteoFotoModel> procesarImagen({
     required String galponId,
-    required String imagePath,
+    required Uint8List imageBytes,
+    required String imageFilename,
   }) async {
     try {
-      final response = await _httpClient.uploadFile(
+      final response = await _httpClient.uploadFileBytes(
         ApiEndpoints.inventarioProcesar,
-        filePath: imagePath,
+        bytes: imageBytes,
+        filename: imageFilename,
         fieldName: 'imagen',
         extraData: {'galpon_id': galponId},
       );
 
       final data = ApiResponseParser.extractDataMap(response.data);
-      return _mapJobToConteo(data);
+      return _mapJobToConteo(data, fallbackGalponId: galponId);
     } on DioException catch (e) {
-      throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al procesar imagen');
+      throw ApiResponseParser.toServerException(e,
+          fallbackMessage: 'Error al procesar imagen');
     } catch (e) {
       if (e is ServerException) rethrow;
-      throw ServerException(message: 'Error al procesar imagen', originalException: e);
+      throw ServerException(
+          message: 'Error al procesar imagen', originalException: e);
     }
   }
 
@@ -115,16 +143,19 @@ class InventarioFotoRemoteDataSourceImpl implements InventarioFotoRemoteDataSour
         data: {
           'job_id': conteoId,
           'conteo_manual': conteoManual,
+          'conteo_confirmado': conteoFinal ?? conteoManual,
           if (conteoFinal != null) 'conteo_final': conteoFinal,
         },
       );
       final data = ApiResponseParser.extractDataMap(response.data);
       return _mapJobToConteo(data);
     } on DioException catch (e) {
-      throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al actualizar conteo');
+      throw ApiResponseParser.toServerException(e,
+          fallbackMessage: 'Error al actualizar conteo');
     } catch (e) {
       if (e is ServerException) rethrow;
-      throw ServerException(message: 'Error al actualizar conteo', originalException: e);
+      throw ServerException(
+          message: 'Error al actualizar conteo', originalException: e);
     }
   }
 
@@ -140,15 +171,18 @@ class InventarioFotoRemoteDataSourceImpl implements InventarioFotoRemoteDataSour
         data: {
           'job_id': conteoId,
           'galpon_id': galponId,
+          'conteo_confirmado': cantidadFinal,
           'cantidad_final': cantidadFinal,
           'conteo_final': cantidadFinal,
         },
       );
     } on DioException catch (e) {
-      throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al confirmar inventario');
+      throw ApiResponseParser.toServerException(e,
+          fallbackMessage: 'Error al confirmar inventario');
     } catch (e) {
       if (e is ServerException) rethrow;
-      throw ServerException(message: 'Error al confirmar inventario', originalException: e);
+      throw ServerException(
+          message: 'Error al confirmar inventario', originalException: e);
     }
   }
 
@@ -165,24 +199,29 @@ class InventarioFotoRemoteDataSourceImpl implements InventarioFotoRemoteDataSour
           .where((item) => item.galponId == galponId || item.galponId.isEmpty)
           .toList();
     } on DioException catch (e) {
-      throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al obtener historial');
+      throw ApiResponseParser.toServerException(e,
+          fallbackMessage: 'Error al obtener historial');
     } catch (e) {
       if (e is ServerException) rethrow;
-      throw ServerException(message: 'Error al obtener historial', originalException: e);
+      throw ServerException(
+          message: 'Error al obtener historial', originalException: e);
     }
   }
 
   @override
   Future<ConteoFotoModel> obtenerConteo(String conteoId) async {
     try {
-      final response = await _httpClient.get(ApiEndpoints.inventarioJobById(conteoId));
+      final response =
+          await _httpClient.get(ApiEndpoints.inventarioJobById(conteoId));
       final data = ApiResponseParser.extractDataMap(response.data);
       return _mapJobToConteo(data);
     } on DioException catch (e) {
-      throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al obtener conteo');
+      throw ApiResponseParser.toServerException(e,
+          fallbackMessage: 'Error al obtener conteo');
     } catch (e) {
       if (e is ServerException) rethrow;
-      throw ServerException(message: 'Error al obtener conteo', originalException: e);
+      throw ServerException(
+          message: 'Error al obtener conteo', originalException: e);
     }
   }
 }

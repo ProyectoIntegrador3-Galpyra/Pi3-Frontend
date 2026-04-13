@@ -3,7 +3,7 @@ class AppConstants {
   AppConstants._();
 
   /// App name
-  static const String appName = 'Poultry Trace';
+  static const String appName = 'GALPyra';
 
   /// App version
   static const String appVersion = '1.0.0';

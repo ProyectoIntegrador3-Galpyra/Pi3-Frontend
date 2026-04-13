@@ -18,14 +18,22 @@ class GalponModel extends Galpon {
 
   factory GalponModel.fromJson(Map<String, dynamic> json) {
     final now = DateTime.now();
+    final capacidad = json['capacidad'] ?? json['capacidad_maxima'];
+    final cantidadActual = json['cantidad_actual'] ?? json['cantidad'];
+    final estadoRaw = (json['estado'] ?? '').toString().toUpperCase();
+    final activoRaw = json['activo'];
+    final bool activo = activoRaw is bool
+        ? activoRaw
+        : (estadoRaw.isNotEmpty ? estadoRaw == 'ACTIVO' : true);
+
     return GalponModel(
-      id: json['id'] as String,
-      nombre: json['nombre'] as String,
+      id: (json['id'] ?? '').toString(),
+      nombre: (json['nombre'] ?? '').toString(),
       descripcion: json['descripcion'] as String?,
-      capacidadMaxima: json['capacidad_maxima'] as int,
-      cantidadActual: json['cantidad_actual'] as int? ?? 0,
+      capacidadMaxima: capacidad is num ? capacidad.toInt() : 0,
+      cantidadActual: cantidadActual is num ? cantidadActual.toInt() : 0,
       ubicacion: json['ubicacion'] as String?,
-      activo: json['activo'] as bool? ?? true,
+      activo: activo,
       sincronizado: true,
       createdAt: json['created_at'] != null 
           ? DateTime.parse(json['created_at'] as String) 
@@ -40,17 +48,14 @@ class GalponModel extends Galpon {
   }
 
   Map<String, dynamic> toJson() {
+    final estado = activo ? 'ACTIVO' : 'INACTIVO';
     return {
-      'id': id,
       'nombre': nombre,
-      'descripcion': descripcion,
-      'capacidad_maxima': capacidadMaxima,
-      'cantidad_actual': cantidadActual,
+      'capacidad': capacidadMaxima,
       'ubicacion': ubicacion,
-      'activo': activo,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
-      if (deletedAt != null) 'deleted_at': deletedAt!.toIso8601String(),
+      'estado': estado,
+      if (descripcion != null && descripcion!.trim().isNotEmpty)
+        'descripcion': descripcion,
     };
   }
 

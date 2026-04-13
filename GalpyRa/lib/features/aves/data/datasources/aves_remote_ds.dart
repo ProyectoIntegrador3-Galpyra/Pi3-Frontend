@@ -18,6 +18,7 @@ abstract class AvesRemoteDataSource {
   });
   Future<LoteAvesModel> registrarIngreso({
     required String galponId,
+    String? nombreLote,
     required String raza,
     required int cantidad,
     required DateTime fechaIngreso,
@@ -33,24 +34,43 @@ class AvesRemoteDataSourceImpl implements AvesRemoteDataSource {
 
   AvesRemoteDataSourceImpl(this._httpClient);
 
+  /// Obtiene el ID del primer lote activo del galpón, necesario para mortalidad y sanidad.
+  Future<String> _getActiveLoteId(String galponId) async {
+    final response = await _httpClient.get(ApiEndpoints.avesByGalpon(galponId));
+    final list = ApiResponseParser.extractDataList(response.data);
+    if (list.isEmpty) {
+      throw const ServerException(
+        message:
+            'No hay lotes registrados para este galpon. Registra un ingreso primero.',
+      );
+    }
+    final lote = ApiResponseParser.asMap(list.first);
+    final id = lote['id']?.toString() ?? '';
+    if (id.isEmpty) {
+      throw const ServerException(
+          message: 'Lote sin ID valido en el servidor.');
+    }
+    return id;
+  }
+
   @override
   Future<List<LoteAvesModel>> consultarInventario(String galponId) async {
     try {
-      final response = await _httpClient.get(
-        ApiEndpoints.inventarioAves,
-        queryParameters: {'galpon_id': galponId},
-      );
+      final response =
+          await _httpClient.get(ApiEndpoints.avesByGalpon(galponId));
 
       final list = ApiResponseParser.extractDataList(response.data);
       if (list.isNotEmpty) {
         return list
-            .map((item) => LoteAvesModel.fromJson(ApiResponseParser.asMap(item)))
+            .map(
+                (item) => LoteAvesModel.fromJson(ApiResponseParser.asMap(item)))
             .toList();
       }
 
       return <LoteAvesModel>[];
     } on DioException catch (e) {
-      throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al consultar inventario');
+      throw ApiResponseParser.toServerException(e,
+          fallbackMessage: 'Error al consultar inventario');
     }
   }
 
@@ -63,24 +83,30 @@ class AvesRemoteDataSourceImpl implements AvesRemoteDataSource {
     String? observaciones,
   }) async {
     try {
+      // Backend requires lote_id; fetch the active lote for this galpon first.
+      final loteId = await _getActiveLoteId(galponId);
+
       await _httpClient.post(
         ApiEndpoints.mortalidad,
         data: {
-          'galpon_id': galponId,
+          'lote_id': loteId,
           'cantidad': cantidad,
           'causa': causa,
           'fecha': fecha.toIso8601String(),
-          if (observaciones != null && observaciones.isNotEmpty) 'observaciones': observaciones,
+          if (observaciones != null && observaciones.isNotEmpty)
+            'observaciones': observaciones,
         },
       );
     } on DioException catch (e) {
-      throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al registrar mortalidad');
+      throw ApiResponseParser.toServerException(e,
+          fallbackMessage: 'Error al registrar mortalidad');
     }
   }
 
   @override
   Future<LoteAvesModel> registrarIngreso({
     required String galponId,
+    String? nombreLote,
     required String raza,
     required int cantidad,
     required DateTime fechaIngreso,
@@ -89,26 +115,34 @@ class AvesRemoteDataSourceImpl implements AvesRemoteDataSource {
     String? observaciones,
   }) async {
     try {
+      // Backend creates a Lote (POST /api/lotes) which represents the ingreso.
+      final codigoLote = (nombreLote != null && nombreLote.trim().isNotEmpty)
+          ? nombreLote.trim()
+          : 'LOTE-${DateTime.now().millisecondsSinceEpoch}';
       final response = await _httpClient.post(
         ApiEndpoints.ingresoAves,
         data: {
-          'galpon_id': galponId,
+          'codigo_lote': codigoLote,
+          'nombre_lote': codigoLote,
+          'tipo_ave': 'ponedora',
           'raza': raza,
-          'cantidad': cantidad,
-          'fecha_ingreso': fechaIngreso.toIso8601String(),
-          if (edadSemanas != null) 'edad_semanas': edadSemanas,
-          if (pesoPromedio != null) 'peso_promedio': pesoPromedio,
-          if (observaciones != null && observaciones.isNotEmpty) 'observaciones': observaciones,
+          'cantidad_inicial': cantidad,
+          'fecha_ingreso': fechaIngreso.toIso8601String().split('T').first,
+          'galpon_id': galponId,
+          if (observaciones != null && observaciones.isNotEmpty)
+            'observaciones': observaciones,
         },
       );
 
       final data = ApiResponseParser.extractDataMap(response.data);
       return LoteAvesModel.fromJson(data);
     } on DioException catch (e) {
-      throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al registrar ingreso');
+      throw ApiResponseParser.toServerException(e,
+          fallbackMessage: 'Error al registrar ingreso');
     } catch (e) {
       if (e is ServerException) rethrow;
-      throw ServerException(message: 'Error al registrar ingreso', originalException: e);
+      throw ServerException(
+          message: 'Error al registrar ingreso', originalException: e);
     }
   }
 }
