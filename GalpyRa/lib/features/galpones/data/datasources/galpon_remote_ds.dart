@@ -50,7 +50,8 @@ class GalponRemoteDataSourceImpl implements GalponRemoteDataSource {
 
       return <GalponModel>[];
     } on DioException catch (e) {
-      throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al obtener galpones');
+      throw ApiResponseParser.toServerException(e,
+          fallbackMessage: 'Error al obtener galpones');
     } catch (e) {
       throw ServerException(
         message: 'Error al obtener galpones',
@@ -66,7 +67,8 @@ class GalponRemoteDataSourceImpl implements GalponRemoteDataSource {
       final data = ApiResponseParser.extractDataMap(response.data);
       return GalponModel.fromJson(data);
     } on DioException catch (e) {
-      throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al obtener galpon');
+      throw ApiResponseParser.toServerException(e,
+          fallbackMessage: 'Error al obtener galpon');
     } catch (e) {
       throw ServerException(
         message: 'Error al obtener galpon',
@@ -91,7 +93,8 @@ class GalponRemoteDataSourceImpl implements GalponRemoteDataSource {
       final data = ApiResponseParser.extractDataMap(response.data);
       return GalponModel.fromJson(data.isEmpty ? galpon.toJson() : data);
     } on DioException catch (e) {
-      throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al crear galpon');
+      throw ApiResponseParser.toServerException(e,
+          fallbackMessage: 'Error al crear galpon');
     } catch (e) {
       throw ServerException(
         message: 'Error al crear galpon',
@@ -110,7 +113,8 @@ class GalponRemoteDataSourceImpl implements GalponRemoteDataSource {
       final data = ApiResponseParser.extractDataMap(response.data);
       return GalponModel.fromJson(data.isEmpty ? galpon.toJson() : data);
     } on DioException catch (e) {
-      throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al editar galpon');
+      throw ApiResponseParser.toServerException(e,
+          fallbackMessage: 'Error al editar galpon');
     } catch (e) {
       throw ServerException(
         message: 'Error al editar galpon',
@@ -124,7 +128,8 @@ class GalponRemoteDataSourceImpl implements GalponRemoteDataSource {
     try {
       await _httpClient.delete(ApiEndpoints.galponById(id));
     } on DioException catch (e) {
-      throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al eliminar galpon');
+      throw ApiResponseParser.toServerException(e,
+          fallbackMessage: 'Error al eliminar galpon');
     } catch (e) {
       throw ServerException(
         message: 'Error al eliminar galpon',

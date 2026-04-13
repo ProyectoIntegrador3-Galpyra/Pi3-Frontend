@@ -195,9 +195,10 @@ class _BreedSelectorState extends State<BreedSelector> {
                           selectedBreedInfo.description,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
                         ),
                     ],
                   ),
@@ -251,7 +252,10 @@ class _BreedSelectorState extends State<BreedSelector> {
                             children: [
                               Text(
                                 breed.name,
-                                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelLarge
+                                    ?.copyWith(
                                       fontWeight: isSelected
                                           ? FontWeight.w700
                                           : FontWeight.w600,
@@ -264,7 +268,10 @@ class _BreedSelectorState extends State<BreedSelector> {
                                 breed.description,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
                                       color: AppColors.textSecondary,
                                       fontSize: 11,
                                     ),
@@ -273,7 +280,8 @@ class _BreedSelectorState extends State<BreedSelector> {
                           ),
                         ),
                         if (isSelected)
-                          Icon(Icons.check, color: AppColors.primaryLight, size: 20),
+                          Icon(Icons.check,
+                              color: AppColors.primaryLight, size: 20),
                       ],
                     ),
                   ),
@@ -307,13 +315,16 @@ class _BreedSelectorState extends State<BreedSelector> {
                           ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: _getProductionTypeColor(selectedBreedInfo.productionType),
+                        color: _getProductionTypeColor(
+                            selectedBreedInfo.productionType),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        _getProductionTypeLabel(selectedBreedInfo.productionType),
+                        _getProductionTypeLabel(
+                            selectedBreedInfo.productionType),
                         style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -332,9 +343,10 @@ class _BreedSelectorState extends State<BreedSelector> {
                       Expanded(
                         child: Text(
                           '~${selectedBreedInfo.estimatedEggsPerYear.toInt()} huevos/año',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
                         ),
                       ),
                     ],

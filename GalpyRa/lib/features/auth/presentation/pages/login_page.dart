@@ -47,7 +47,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
       final success = await ref.read(authControllerProvider.notifier).login(
             normalizedEmail,
-        normalizedPassword,
+            normalizedPassword,
           );
 
       if (success && mounted) {
@@ -73,7 +73,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               children: [
                 const SizedBox(height: 20),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
@@ -158,7 +159,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               Expanded(
                                 child: Text(
                                   authState.error!,
-                                  style: const TextStyle(color: AppColors.error),
+                                  style:
+                                      const TextStyle(color: AppColors.error),
                                 ),
                               ),
                             ],
@@ -211,7 +213,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                 ),
                 const SizedBox(height: 14),
-
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(

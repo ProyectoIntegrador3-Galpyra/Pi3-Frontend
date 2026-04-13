@@ -28,7 +28,9 @@ class _GalponDetailPageState extends ConsumerState<GalponDetailPage> {
   void initState() {
     super.initState();
     Future.microtask(() {
-      ref.read(galponesControllerProvider.notifier).obtenerGalpon(widget.galponId);
+      ref
+          .read(galponesControllerProvider.notifier)
+          .obtenerGalpon(widget.galponId);
     });
   }
 
@@ -59,7 +61,9 @@ class _GalponDetailPageState extends ConsumerState<GalponDetailPage> {
       return ErrorView.generic(
         message: state.error,
         onRetry: () {
-          ref.read(galponesControllerProvider.notifier).obtenerGalpon(widget.galponId);
+          ref
+              .read(galponesControllerProvider.notifier)
+              .obtenerGalpon(widget.galponId);
         },
       );
     }
@@ -86,7 +90,10 @@ class _GalponDetailPageState extends ConsumerState<GalponDetailPage> {
                       Expanded(
                         child: Text(
                           galpon.nombre,
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
+                              ?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
                         ),
@@ -105,7 +112,9 @@ class _GalponDetailPageState extends ConsumerState<GalponDetailPage> {
                         child: Text(
                           galpon.activo ? 'Activo' : 'Inactivo',
                           style: TextStyle(
-                            color: galpon.activo ? AppColors.success : AppColors.error,
+                            color: galpon.activo
+                                ? AppColors.success
+                                : AppColors.error,
                             fontWeight: FontWeight.w500,
                           ),
                         ),

@@ -27,7 +27,19 @@ class _AgeSelectorState extends State<AgeSelector> {
   late int _selectedAge;
 
   // Common preset ages for poultry
-  static const List<int> _presetAges = [1, 4, 8, 12, 16, 18, 20, 24, 30, 40, 52];
+  static const List<int> _presetAges = [
+    1,
+    4,
+    8,
+    12,
+    16,
+    18,
+    20,
+    24,
+    30,
+    40,
+    52
+  ];
 
   @override
   void initState() {
@@ -105,7 +117,8 @@ class _AgeSelectorState extends State<AgeSelector> {
                     enabledThumbRadius: 14,
                     elevation: 4,
                   ),
-                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 20),
+                  overlayShape:
+                      const RoundSliderOverlayShape(overlayRadius: 20),
                   activeTrackColor: AppColors.primaryLight,
                   inactiveTrackColor: AppColors.border,
                   thumbColor: AppColors.primaryLight,
@@ -201,7 +214,8 @@ class _AgeSelectorState extends State<AgeSelector> {
               const SizedBox(height: 6),
               Row(
                 children: [
-                  Icon(Icons.info_outline, size: 16, color: AppColors.textSecondary),
+                  Icon(Icons.info_outline,
+                      size: 16, color: AppColors.textSecondary),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -264,7 +278,8 @@ class _PresetAgeButton extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.primaryLight : AppColors.surfaceVariant,
+            color:
+                isSelected ? AppColors.primaryLight : AppColors.surfaceVariant,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: isSelected ? AppColors.primaryLight : AppColors.border,

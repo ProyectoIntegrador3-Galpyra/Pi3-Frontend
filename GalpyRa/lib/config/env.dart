@@ -7,23 +7,22 @@ class Env {
   /// Optional override for API URL passed with:
   /// --dart-define=API_BASE_URL_OVERRIDE=https://your-api
   static const String apiBaseUrlOverride =
-    String.fromEnvironment('API_BASE_URL_OVERRIDE', defaultValue: '');
+      String.fromEnvironment('API_BASE_URL_OVERRIDE', defaultValue: '');
 
   /// Base URL for API calls
-  static const String baseUrl =
-    String.fromEnvironment(
-      'API_BASE_URL',
-      defaultValue: 'http://galpyra-1776052294.us-east-2.elasticbeanstalk.com',
-    );
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://galpyra-1776052294.us-east-2.elasticbeanstalk.com',
+  );
 
   /// Development base URL
-  static const String devBaseUrl =
-    String.fromEnvironment('API_DEV_BASE_URL', defaultValue: 'http://127.0.0.1:8000');
+  static const String devBaseUrl = String.fromEnvironment('API_DEV_BASE_URL',
+      defaultValue: 'http://127.0.0.1:8000');
 
   /// Current environment
   static bool get isProduction =>
-    const bool.fromEnvironment('APP_PRODUCTION', defaultValue: false) ||
-    kReleaseMode;
+      const bool.fromEnvironment('APP_PRODUCTION', defaultValue: false) ||
+      kReleaseMode;
 
   /// Enable debug logs
   static const bool enableLogs = true;
