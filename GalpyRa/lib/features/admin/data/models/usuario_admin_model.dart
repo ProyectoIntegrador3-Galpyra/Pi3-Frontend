@@ -58,7 +58,8 @@ class UsuarioAdminModel extends UsuarioAdmin {
   static List<UsuarioAdminModel> fromList(dynamic body) {
     final list = ApiResponseParser.extractDataList(body);
     return list
-        .map((item) => UsuarioAdminModel.fromJson(ApiResponseParser.asMap(item)))
+        .map(
+            (item) => UsuarioAdminModel.fromJson(ApiResponseParser.asMap(item)))
         .toList();
   }
 }

@@ -41,8 +41,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     if (state.errorMessage != null && state.datosDashboard == null) {
       return ErrorView(
         message: state.errorMessage!,
-        onRetry: () =>
-            ref.read(reportesControllerProvider.notifier).cargarDatosDashboard(),
+        onRetry: () => ref
+            .read(reportesControllerProvider.notifier)
+            .cargarDatosDashboard(),
       );
     }
 
@@ -162,7 +163,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   }
 
   Widget _buildAlertasCard(Map<String, dynamic> datos) {
-    final alertas = (datos['alertas'] as List?)?.map((e) => e.toString()).toList() ?? <String>[];
+    final alertas =
+        (datos['alertas'] as List?)?.map((e) => e.toString()).toList() ??
+            <String>[];
 
     return Card(
       child: Padding(
@@ -184,7 +187,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   padding: EdgeInsets.all(16),
                   child: Column(
                     children: [
-                      Icon(Icons.check_circle, size: 48, color: AppColors.success),
+                      Icon(Icons.check_circle,
+                          size: 48, color: AppColors.success),
                       SizedBox(height: 8),
                       Text(
                         'Todo en orden',

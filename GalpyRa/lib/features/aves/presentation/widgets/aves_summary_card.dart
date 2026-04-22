@@ -32,7 +32,8 @@ class AvesSummaryCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                      color:
+                          Theme.of(context).primaryColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
@@ -47,23 +48,26 @@ class AvesSummaryCard extends StatelessWidget {
                       children: [
                         Text(
                           lote.raza ?? 'Sin raza',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                         Text(
                           'Ingreso: ${AppDateUtils.formatDate(lote.fechaIngreso)}',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.grey,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Colors.grey,
+                                  ),
                         ),
                       ],
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: AppColors.success.withValues(alpha:0.1),
+                      color: AppColors.success.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -98,7 +102,8 @@ class AvesSummaryCard extends StatelessWidget {
               ),
 
               // Observaciones
-              if (lote.observaciones != null && lote.observaciones!.isNotEmpty) ...[
+              if (lote.observaciones != null &&
+                  lote.observaciones!.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 const Divider(),
                 const SizedBox(height: 8),
@@ -127,7 +132,8 @@ class AvesSummaryCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStat(BuildContext context, String label, String value, IconData icon) {
+  Widget _buildStat(
+      BuildContext context, String label, String value, IconData icon) {
     return Row(
       children: [
         Icon(icon, size: 18, color: Colors.grey),

@@ -32,7 +32,8 @@ class RegistroSanitarioCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: _getTipoColor(registro.tipo).withValues(alpha: 0.1),
+                      color:
+                          _getTipoColor(registro.tipo).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
@@ -48,15 +49,17 @@ class RegistroSanitarioCard extends StatelessWidget {
                       children: [
                         Text(
                           registro.descripcion,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                         Text(
                           registro.tipoNombre,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: _getTipoColor(registro.tipo),
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: _getTipoColor(registro.tipo),
+                                  ),
                         ),
                       ],
                     ),
@@ -71,7 +74,8 @@ class RegistroSanitarioCard extends StatelessWidget {
               ),
 
               // Details
-              if (registro.medicamento != null || registro.veterinario != null) ...[
+              if (registro.medicamento != null ||
+                  registro.veterinario != null) ...[
                 const SizedBox(height: 12),
                 const Divider(),
                 const SizedBox(height: 8),
@@ -87,7 +91,8 @@ class RegistroSanitarioCard extends StatelessWidget {
                         registro.dosis != null ? ' (${registro.dosis})' : '',
                       ),
                     if (registro.veterinario != null)
-                      _buildDetailChip(context, Icons.person, registro.veterinario!),
+                      _buildDetailChip(
+                          context, Icons.person, registro.veterinario!),
                     if (registro.avesAfectadas != null)
                       _buildDetailChip(
                         context,
@@ -106,12 +111,14 @@ class RegistroSanitarioCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.amber.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                    border:
+                        Border.all(color: Colors.amber.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.event_repeat, size: 16, color: Colors.amber),
+                      const Icon(Icons.event_repeat,
+                          size: 16, color: Colors.amber),
                       const SizedBox(width: 8),
                       Text(
                         'Próxima: ${AppDateUtils.formatDate(registro.fechaProximaAplicacion!)}',
@@ -127,7 +134,8 @@ class RegistroSanitarioCard extends StatelessWidget {
               ],
 
               // Observaciones
-              if (registro.observaciones != null && registro.observaciones!.isNotEmpty) ...[
+              if (registro.observaciones != null &&
+                  registro.observaciones!.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text(
                   registro.observaciones!,
@@ -146,7 +154,8 @@ class RegistroSanitarioCard extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailChip(BuildContext context, IconData icon, String text, [String? suffix]) {
+  Widget _buildDetailChip(BuildContext context, IconData icon, String text,
+      [String? suffix]) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [

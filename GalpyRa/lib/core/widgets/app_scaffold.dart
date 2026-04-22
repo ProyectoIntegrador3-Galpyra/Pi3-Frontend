@@ -43,9 +43,8 @@ class AppScaffold extends StatelessWidget {
     return Scaffold(
       backgroundColor: backgroundColor ?? AppColors.background,
       resizeToAvoidBottomInset: resizeToAvoidBottomInset,
-      appBar: title != null || titleWidget != null
-          ? _buildAppBar(context)
-          : null,
+      appBar:
+          title != null || titleWidget != null ? _buildAppBar(context) : null,
       body: body,
       floatingActionButton: floatingActionButton,
       bottomNavigationBar: bottomNavigationBar,
@@ -71,7 +70,8 @@ class AppScaffold extends StatelessWidget {
                 (showBackButton && Navigator.canPop(context)
                     ? IconButton(
                         icon: const Icon(Icons.arrow_back),
-                        onPressed: onBackPressed ?? () => Navigator.pop(context),
+                        onPressed:
+                            onBackPressed ?? () => Navigator.pop(context),
                       )
                     : null),
           ),

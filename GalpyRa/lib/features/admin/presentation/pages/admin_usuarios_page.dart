@@ -37,7 +37,8 @@ class _AdminUsuariosPageState extends ConsumerState<AdminUsuariosPage> {
         child: const Icon(Icons.add),
       ),
       body: RefreshIndicator(
-        onRefresh: () => ref.read(adminControllerProvider.notifier).cargarUsuarios(),
+        onRefresh: () =>
+            ref.read(adminControllerProvider.notifier).cargarUsuarios(),
         child: _buildBody(state),
       ),
     );
@@ -51,7 +52,8 @@ class _AdminUsuariosPageState extends ConsumerState<AdminUsuariosPage> {
     if (state.error != null && state.usuarios.isEmpty) {
       return ErrorView(
         message: state.error!,
-        onRetry: () => ref.read(adminControllerProvider.notifier).cargarUsuarios(),
+        onRetry: () =>
+            ref.read(adminControllerProvider.notifier).cargarUsuarios(),
       );
     }
 
@@ -116,7 +118,8 @@ class _AdminUsuariosPageState extends ConsumerState<AdminUsuariosPage> {
       builder: (ctx) {
         return AlertDialog(
           title: const Text('Eliminar usuario'),
-          content: const Text('Esta accion no se puede deshacer. Deseas continuar?'),
+          content:
+              const Text('Esta accion no se puede deshacer. Deseas continuar?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
@@ -132,12 +135,14 @@ class _AdminUsuariosPageState extends ConsumerState<AdminUsuariosPage> {
     );
 
     if (shouldDelete == true && context.mounted) {
-      final ok = await ref.read(adminControllerProvider.notifier).eliminarUsuario(id);
+      final ok =
+          await ref.read(adminControllerProvider.notifier).eliminarUsuario(id);
       if (!context.mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(ok ? 'Usuario eliminado' : 'No se pudo eliminar el usuario'),
+          content:
+              Text(ok ? 'Usuario eliminado' : 'No se pudo eliminar el usuario'),
         ),
       );
     }

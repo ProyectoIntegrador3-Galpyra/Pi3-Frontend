@@ -84,7 +84,8 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
       final payload = <String, dynamic>{
         if (nombre != null) 'nombre': nombre,
         if (email != null) 'email': email,
-        if (password != null && password.trim().isNotEmpty) 'password': password,
+        if (password != null && password.trim().isNotEmpty)
+          'password': password,
         if (role != null) 'rol': role,
       };
 

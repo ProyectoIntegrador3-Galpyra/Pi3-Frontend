@@ -496,7 +496,6 @@ class HomePage extends ConsumerWidget {
       ),
     );
   }
-
 }
 
 class _MenuItem {

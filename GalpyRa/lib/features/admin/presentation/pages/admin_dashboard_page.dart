@@ -13,7 +13,8 @@ import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/loading.dart';
 import '../../domain/entities/dashboard_admin_data.dart';
 
-final adminDashboardFutureProvider = FutureProvider<DashboardAdminData>((ref) async {
+final adminDashboardFutureProvider =
+    FutureProvider<DashboardAdminData>((ref) async {
   final httpClient = getIt<HttpClient>();
   final response = await httpClient.get(ApiEndpoints.adminDashboard);
   final data = ApiResponseParser.extractDataMap(response.data);
@@ -46,10 +47,14 @@ class AdminDashboardPage extends ConsumerWidget {
       _KpiItem('Produccion hoy', '${data.produccionHoy}', Icons.egg_outlined),
       _KpiItem('Produccion mes', '${data.produccionMes}', Icons.calendar_today),
       _KpiItem('Mortalidad mes', '${data.mortalidadMes}', Icons.warning_amber),
-      _KpiItem('Tasa mortalidad', '${data.tasaMortalidadMes.toStringAsFixed(2)}%', Icons.percent),
-      _KpiItem('Gasto alimento mes', data.gastoAlimentoMes.toStringAsFixed(2), Icons.attach_money),
-      _KpiItem('Gasto alimento ano', data.gastoAlimentoAnio.toStringAsFixed(2), Icons.trending_up),
-      _KpiItem('Galpones activos', '${data.galponesActivos}', Icons.home_work_outlined),
+      _KpiItem('Tasa mortalidad',
+          '${data.tasaMortalidadMes.toStringAsFixed(2)}%', Icons.percent),
+      _KpiItem('Gasto alimento mes', data.gastoAlimentoMes.toStringAsFixed(2),
+          Icons.attach_money),
+      _KpiItem('Gasto alimento ano', data.gastoAlimentoAnio.toStringAsFixed(2),
+          Icons.trending_up),
+      _KpiItem('Galpones activos', '${data.galponesActivos}',
+          Icons.home_work_outlined),
     ];
 
     return SingleChildScrollView(

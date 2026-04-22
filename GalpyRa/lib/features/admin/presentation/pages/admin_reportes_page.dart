@@ -186,7 +186,8 @@ class _AdminReportesPageState extends ConsumerState<AdminReportesPage>
             ],
           )
           .toList(),
-      resumen: 'Total huevos: $totalHuevos | Promedio diario: ${promedio.toStringAsFixed(2)}',
+      resumen:
+          'Total huevos: $totalHuevos | Promedio diario: ${promedio.toStringAsFixed(2)}',
     );
   }
 
@@ -238,8 +239,8 @@ class _AdminReportesPageState extends ConsumerState<AdminReportesPage>
   }
 
   Widget _tablaInventario(ReportesAdminState state) {
-    final avesActuales = state.inventario
-        .fold<int>(0, (sum, item) => sum + item.avesActuales);
+    final avesActuales =
+        state.inventario.fold<int>(0, (sum, item) => sum + item.avesActuales);
 
     return _tableWrapper(
       columns: const ['Galpon', 'Aves iniciales', 'Bajas', 'Aves actuales'],

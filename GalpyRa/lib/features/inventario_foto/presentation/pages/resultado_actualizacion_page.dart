@@ -90,7 +90,10 @@ class _ResultadoActualizacionPageState
     InventarioFotoState state,
     dynamic conteo,
   ) {
-    final conteoFinal = conteo.conteoFinal ?? conteo.conteoManual ?? conteo.conteoAutomatico ?? 0;
+    final conteoFinal = conteo.conteoFinal ??
+        conteo.conteoManual ??
+        conteo.conteoAutomatico ??
+        0;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),

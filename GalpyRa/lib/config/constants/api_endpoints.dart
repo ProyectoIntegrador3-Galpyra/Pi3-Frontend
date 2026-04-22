@@ -29,17 +29,20 @@ class ApiEndpoints {
   // Producción endpoints
   static const String produccion = '/api/produccion';
   static const String produccionRango = '/api/produccion/rango';
-  static String produccionByGalpon(String galponId) => '/api/produccion/galpon/$galponId';
+  static String produccionByGalpon(String galponId) =>
+      '/api/produccion/galpon/$galponId';
 
   // Sanidad endpoints
   static const String sanidad = '/api/sanidad';
-  static String historialSanidad(String loteId) => '/api/sanidad/historial/$loteId';
+  static String historialSanidad(String loteId) =>
+      '/api/sanidad/historial/$loteId';
   // GET /api/sanidad returns all events; filter client-side by galpon_id
   static String sanidadByGalpon(String galponId) => '/api/sanidad';
 
   // Alimentación endpoints
   static const String alimentacion = '/api/alimentacion';
-  static String alimentacionRango(String loteId) => '/api/alimentacion/conversion/$loteId';
+  static String alimentacionRango(String loteId) =>
+      '/api/alimentacion/conversion/$loteId';
   // GET /api/alimentacion returns all records; filter client-side by galpon_id
   static String alimentacionByGalpon(String galponId) => '/api/alimentacion';
 
@@ -51,7 +54,8 @@ class ApiEndpoints {
   static const String inventarioProcesar = '/api/inventario/procesar';
   static const String inventarioConfirmar = '/api/inventario/confirmar';
   static const String inventarioJobs = '/api/inventario/jobs';
-  static String inventarioJobById(String jobId) => '/api/inventario/jobs/$jobId';
+  static String inventarioJobById(String jobId) =>
+      '/api/inventario/jobs/$jobId';
 
   // Reportes endpoints
   static const String reportes = '/api/reportes';

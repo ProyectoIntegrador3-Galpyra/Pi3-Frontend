@@ -31,7 +31,8 @@ abstract class ReportesAdminRemoteDataSource {
   });
 }
 
-class ReportesAdminRemoteDataSourceImpl implements ReportesAdminRemoteDataSource {
+class ReportesAdminRemoteDataSourceImpl
+    implements ReportesAdminRemoteDataSource {
   final HttpClient _httpClient;
 
   ReportesAdminRemoteDataSourceImpl(this._httpClient);
@@ -57,7 +58,8 @@ class ReportesAdminRemoteDataSourceImpl implements ReportesAdminRemoteDataSource
       );
       final data = ApiResponseParser.extractDataList(response.data);
       return data
-          .map((e) => ReporteProduccionItem.fromJson(ApiResponseParser.asMap(e)))
+          .map(
+              (e) => ReporteProduccionItem.fromJson(ApiResponseParser.asMap(e)))
           .toList();
     } on DioException catch (e) {
       throw ApiResponseParser.toServerException(
@@ -104,7 +106,8 @@ class ReportesAdminRemoteDataSourceImpl implements ReportesAdminRemoteDataSource
       );
       final data = ApiResponseParser.extractDataList(response.data);
       return data
-          .map((e) => ReporteMortalidadItem.fromJson(ApiResponseParser.asMap(e)))
+          .map(
+              (e) => ReporteMortalidadItem.fromJson(ApiResponseParser.asMap(e)))
           .toList();
     } on DioException catch (e) {
       throw ApiResponseParser.toServerException(
@@ -127,7 +130,8 @@ class ReportesAdminRemoteDataSourceImpl implements ReportesAdminRemoteDataSource
       );
       final data = ApiResponseParser.extractDataList(response.data);
       return data
-          .map((e) => ReporteInventarioItem.fromJson(ApiResponseParser.asMap(e)))
+          .map(
+              (e) => ReporteInventarioItem.fromJson(ApiResponseParser.asMap(e)))
           .toList();
     } on DioException catch (e) {
       throw ApiResponseParser.toServerException(

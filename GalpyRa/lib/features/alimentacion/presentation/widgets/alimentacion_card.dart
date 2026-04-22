@@ -20,7 +20,9 @@ class AlimentacionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      color: isToday ? Theme.of(context).primaryColor.withValues(alpha: 0.05) : null,
+      color: isToday
+          ? Theme.of(context).primaryColor.withValues(alpha: 0.05)
+          : null,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
@@ -35,7 +37,8 @@ class AlimentacionCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: _getTipoColor(registro.tipoAlimento).withValues(alpha: 0.1),
+                      color: _getTipoColor(registro.tipoAlimento)
+                          .withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
@@ -51,15 +54,17 @@ class AlimentacionCard extends StatelessWidget {
                       children: [
                         Text(
                           registro.nombreAlimento,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                         Text(
                           registro.tipoNombre,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: _getTipoColor(registro.tipoAlimento),
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: _getTipoColor(registro.tipoAlimento),
+                                  ),
                         ),
                       ],
                     ),
@@ -69,13 +74,16 @@ class AlimentacionCard extends StatelessWidget {
                     children: [
                       Text(
                         '${registro.cantidadKg.toStringAsFixed(0)} kg',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).primaryColor,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).primaryColor,
+                                ),
                       ),
                       Text(
-                        isToday ? 'Hoy' : AppDateUtils.formatDate(registro.fecha),
+                        isToday
+                            ? 'Hoy'
+                            : AppDateUtils.formatDate(registro.fecha),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: Colors.grey,
                             ),
@@ -125,7 +133,8 @@ class AlimentacionCard extends StatelessWidget {
               if (registro.loteAlimento != null) ...[
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.grey.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
@@ -138,7 +147,8 @@ class AlimentacionCard extends StatelessWidget {
               ],
 
               // Observaciones
-              if (registro.observaciones != null && registro.observaciones!.isNotEmpty) ...[
+              if (registro.observaciones != null &&
+                  registro.observaciones!.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text(
                   registro.observaciones!,
@@ -157,7 +167,8 @@ class AlimentacionCard extends StatelessWidget {
     );
   }
 
-  Widget _buildMetric(BuildContext context, IconData icon, String value, String label) {
+  Widget _buildMetric(
+      BuildContext context, IconData icon, String value, String label) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [

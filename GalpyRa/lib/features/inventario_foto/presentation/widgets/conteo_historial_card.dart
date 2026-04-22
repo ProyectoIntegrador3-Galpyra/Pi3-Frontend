@@ -32,7 +32,8 @@ class ConteoHistorialCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: _getEstadoColor(conteo.estado).withValues(alpha: 0.1),
+                      color:
+                          _getEstadoColor(conteo.estado).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
@@ -53,7 +54,8 @@ class ConteoHistorialCard extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          app_date.AppDateUtils.formatDateTime(conteo.fechaCaptura),
+                          app_date.AppDateUtils.formatDateTime(
+                              conteo.fechaCaptura),
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 12,
@@ -91,7 +93,9 @@ class ConteoHistorialCard extends StatelessWidget {
                   Expanded(
                     child: _buildConteoItem(
                       'Final',
-                      conteo.conteoFinal ?? conteo.conteoManual ?? conteo.conteoAutomatico,
+                      conteo.conteoFinal ??
+                          conteo.conteoManual ??
+                          conteo.conteoAutomatico,
                       Icons.check_circle,
                       AppColors.success,
                       isHighlighted: true,
@@ -140,7 +144,8 @@ class ConteoHistorialCard extends StatelessWidget {
                   conteo.conteoManual != conteo.conteoAutomatico) ...[
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.amber.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
@@ -148,7 +153,8 @@ class ConteoHistorialCard extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.info_outline, size: 14, color: Colors.amber),
+                      const Icon(Icons.info_outline,
+                          size: 14, color: Colors.amber),
                       const SizedBox(width: 4),
                       Text(
                         'Ajustado manualmente (${_getDiferencia()})',

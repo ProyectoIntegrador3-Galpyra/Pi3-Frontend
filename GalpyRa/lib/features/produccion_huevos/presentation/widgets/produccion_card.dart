@@ -20,7 +20,9 @@ class ProduccionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      color: isToday ? Theme.of(context).primaryColor.withValues(alpha: 0.05) : null,
+      color: isToday
+          ? Theme.of(context).primaryColor.withValues(alpha: 0.05)
+          : null,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
@@ -38,22 +40,30 @@ class ProduccionCard extends StatelessWidget {
                       Icon(
                         Icons.calendar_today,
                         size: 16,
-                        color: isToday ? Theme.of(context).primaryColor : Colors.grey,
+                        color: isToday
+                            ? Theme.of(context).primaryColor
+                            : Colors.grey,
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        isToday ? 'Hoy' : AppDateUtils.formatDate(registro.fecha),
+                        isToday
+                            ? 'Hoy'
+                            : AppDateUtils.formatDate(registro.fecha),
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              color: isToday ? Theme.of(context).primaryColor : null,
+                              color: isToday
+                                  ? Theme.of(context).primaryColor
+                                  : null,
                               fontWeight: isToday ? FontWeight.bold : null,
                             ),
                       ),
                     ],
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _getPosturaColor(registro.porcentajePostura).withValues(alpha: 0.1),
+                      color: _getPosturaColor(registro.porcentajePostura)
+                          .withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -127,7 +137,8 @@ class ProduccionCard extends StatelessWidget {
               ],
 
               // Observaciones
-              if (registro.observaciones != null && registro.observaciones!.isNotEmpty) ...[
+              if (registro.observaciones != null &&
+                  registro.observaciones!.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text(
                   registro.observaciones!,
