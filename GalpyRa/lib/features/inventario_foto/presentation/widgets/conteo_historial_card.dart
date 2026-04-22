@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/conteo_foto.dart';
 import '../../../../core/utils/date_utils.dart' as app_date;
+import '../../../../config/theme/colors.dart';
 
 /// Card para mostrar historial de conteos por foto
 class ConteoHistorialCard extends StatelessWidget {
@@ -92,7 +93,7 @@ class ConteoHistorialCard extends StatelessWidget {
                       'Final',
                       conteo.conteoFinal ?? conteo.conteoManual ?? conteo.conteoAutomatico,
                       Icons.check_circle,
-                      Colors.green,
+                      AppColors.success,
                       isHighlighted: true,
                     ),
                   ),
@@ -222,7 +223,7 @@ class ConteoHistorialCard extends StatelessWidget {
       case EstadoConteo.procesando:
         return Colors.blue;
       case EstadoConteo.completado:
-        return Colors.green;
+        return AppColors.success;
       case EstadoConteo.error:
         return Colors.red;
     }
@@ -255,7 +256,7 @@ class ConteoHistorialCard extends StatelessWidget {
   }
 
   Color _getConfianzaColor(double confianza) {
-    if (confianza >= 0.9) return Colors.green;
+    if (confianza >= 0.9) return AppColors.success;
     if (confianza >= 0.8) return Colors.amber;
     return Colors.orange;
   }

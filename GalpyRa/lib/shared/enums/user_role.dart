@@ -4,7 +4,15 @@ enum UserRole {
   manager,
   supervisor,
   operator,
-  viewer,
+  viewer;
+
+  static UserRole fromString(String value) {
+    final normalized = value.trim().toLowerCase();
+    return UserRole.values.firstWhere(
+      (role) => role.name == normalized,
+      orElse: () => UserRole.viewer,
+    );
+  }
 }
 
 extension UserRoleExtension on UserRole {
@@ -23,27 +31,11 @@ extension UserRoleExtension on UserRole {
     }
   }
 
-  String get value {
-    return name;
-  }
+  String get value => name;
 
-  static UserRole fromString(String value) {
-    final normalized = value.trim().toLowerCase();
-    return UserRole.values.firstWhere(
-      (role) => role.name == normalized,
-      orElse: () => UserRole.viewer,
-    );
-  }
+  bool get canManageUsers => this == UserRole.admin;
 
-  bool get canManageUsers {
-    return this == UserRole.admin;
-  }
+  bool get canEditData => this != UserRole.viewer;
 
-  bool get canEditData {
-    return this != UserRole.viewer;
-  }
-
-  bool get canViewReports {
-    return true;
-  }
+  bool get canViewReports => true;
 }

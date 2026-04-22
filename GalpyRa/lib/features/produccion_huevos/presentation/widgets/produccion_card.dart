@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/produccion_huevos.dart';
 import '../../../../core/utils/date_utils.dart';
+import '../../../../config/theme/colors.dart';
 
 /// Card para mostrar registro de producción
 class ProduccionCard extends StatelessWidget {
@@ -86,7 +87,7 @@ class ProduccionCard extends StatelessWidget {
                       'Aptos',
                       registro.huevosAptos.toString(),
                       Icons.check_circle,
-                      Colors.green,
+                      AppColors.success,
                     ),
                   ),
                   Expanded(
@@ -187,7 +188,7 @@ class ProduccionCard extends StatelessWidget {
   }
 
   Color _getPosturaColor(double porcentaje) {
-    if (porcentaje >= 85) return Colors.green;
+    if (porcentaje >= 85) return AppColors.success;
     if (porcentaje >= 75) return Colors.amber;
     return Colors.red;
   }

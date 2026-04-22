@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/registro_sanitario.dart';
 import '../../../../core/utils/date_utils.dart';
+import '../../../../config/theme/colors.dart';
 
 /// Card para mostrar registro sanitario
 class RegistroSanitarioCard extends StatelessWidget {
@@ -166,7 +167,7 @@ class RegistroSanitarioCard extends StatelessWidget {
       case TipoEventoSanitario.tratamiento:
         return Colors.red;
       case TipoEventoSanitario.inspeccion:
-        return Colors.green;
+        return AppColors.success;
       case TipoEventoSanitario.cuarentena:
         return Colors.orange;
       case TipoEventoSanitario.desparasitacion:

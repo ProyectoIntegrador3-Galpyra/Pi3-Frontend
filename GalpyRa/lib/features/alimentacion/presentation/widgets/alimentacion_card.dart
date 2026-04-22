@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/registro_alimentacion.dart';
 import '../../../../core/utils/date_utils.dart';
+import '../../../../config/theme/colors.dart';
 
 /// Card para mostrar registro de alimentación
 class AlimentacionCard extends StatelessWidget {
@@ -190,7 +191,7 @@ class AlimentacionCard extends StatelessWidget {
       case TipoAlimento.maiz:
         return Colors.orange;
       case TipoAlimento.soya:
-        return Colors.green;
+        return AppColors.success;
       case TipoAlimento.vitaminas:
         return Colors.blue;
       case TipoAlimento.minerales:

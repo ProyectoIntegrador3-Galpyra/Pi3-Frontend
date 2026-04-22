@@ -76,14 +76,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.primary,
-                        AppColors.accentGreen,
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: AppColors.primary,
                     borderRadius: BorderRadius.circular(18),
                   ),
                   child: Column(
@@ -172,7 +165,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       AppTextField(
                         controller: _emailController,
                         label: 'Correo electrónico',
-                        hint: 'demo@example.com',
+                        hint: 'usuario@correo.com',
                         prefixIcon: Icons.email_outlined,
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
@@ -192,15 +185,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       ),
                       const SizedBox(height: 8),
 
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: () {
-                            // TODO: Implement forgot password
-                          },
-                          child: const Text('¿Olvidaste tu contraseña?'),
-                        ),
-                      ),
                       const SizedBox(height: 16),
 
                       AppButton(
@@ -210,21 +194,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         isExpanded: true,
                       ),
                     ],
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.info.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    'Demo: demo@example.com / password',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.info,
-                    ),
-                    textAlign: TextAlign.center,
                   ),
                 ),
               ],

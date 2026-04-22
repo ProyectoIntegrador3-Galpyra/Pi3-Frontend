@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/lote_aves.dart';
 import '../../../../core/utils/date_utils.dart';
+import '../../../../config/theme/colors.dart';
 
 /// Card para mostrar resumen de un lote de aves
 class AvesSummaryCard extends StatelessWidget {
@@ -62,13 +63,13 @@ class AvesSummaryCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.green.withValues(alpha:0.1),
+                      color: AppColors.success.withValues(alpha:0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
                       '${lote.cantidad}',
                       style: const TextStyle(
-                        color: Colors.green,
+                        color: AppColors.success,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

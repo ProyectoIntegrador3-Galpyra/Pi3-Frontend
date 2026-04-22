@@ -76,6 +76,16 @@ import '../../features/reportes/domain/usecases/obtener_datos_dashboard.dart';
 // Trazabilidad
 import '../../features/trazabilidad/data/datasources/trazabilidad_remote_ds.dart';
 
+// Admin
+import '../../features/admin/data/datasources/admin_remote_ds.dart';
+import '../../features/admin/data/datasources/reportes_admin_remote_ds.dart';
+import '../../features/admin/data/repositories/admin_repository_impl.dart';
+import '../../features/admin/domain/repositories/admin_repository.dart';
+import '../../features/admin/domain/usecases/listar_usuarios.dart';
+import '../../features/admin/domain/usecases/crear_usuario.dart';
+import '../../features/admin/domain/usecases/actualizar_usuario.dart';
+import '../../features/admin/domain/usecases/eliminar_usuario.dart';
+
 // Settings
 import '../../features/settings/data/datasources/settings_local_ds.dart';
 import '../../features/settings/data/repositories/settings_repository_impl.dart';
@@ -231,6 +241,26 @@ Future<void> setupInjector() async {
   getIt.registerLazySingleton(() => GenerarReporte(getIt()));
   getIt.registerLazySingleton(() => ExportarReporte(getIt()));
   getIt.registerLazySingleton(() => ObtenerDatosDashboard(getIt()));
+
+  // ========== ADMIN ==========
+  // Datasources
+  getIt.registerLazySingleton<AdminRemoteDataSource>(
+    () => AdminRemoteDataSourceImpl(getIt()),
+  );
+  getIt.registerLazySingleton<ReportesAdminRemoteDataSource>(
+    () => ReportesAdminRemoteDataSourceImpl(getIt()),
+  );
+
+  // Repository
+  getIt.registerLazySingleton<AdminRepository>(
+    () => AdminRepositoryImpl(getIt()),
+  );
+
+  // Use cases
+  getIt.registerLazySingleton(() => ListarUsuariosUseCase(getIt()));
+  getIt.registerLazySingleton(() => CrearUsuarioUseCase(getIt()));
+  getIt.registerLazySingleton(() => ActualizarUsuarioUseCase(getIt()));
+  getIt.registerLazySingleton(() => EliminarUsuarioUseCase(getIt()));
 
   // ========== TRAZABILIDAD ==========
   getIt.registerLazySingleton<TrazabilidadRemoteDataSource>(

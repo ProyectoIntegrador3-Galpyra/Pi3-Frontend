@@ -16,8 +16,10 @@ class Env {
   );
 
   /// Development base URL
-  static const String devBaseUrl = String.fromEnvironment('API_DEV_BASE_URL',
-      defaultValue: 'http://127.0.0.1:8000');
+  static const String devBaseUrl = String.fromEnvironment(
+    'API_DEV_BASE_URL',
+    defaultValue: 'http://galpyra-1776052294.us-east-2.elasticbeanstalk.com',
+  );
 
   /// Current environment
   static bool get isProduction =>

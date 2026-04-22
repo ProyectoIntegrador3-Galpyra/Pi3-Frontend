@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../config/routes/route_paths.dart';
+import '../../../../config/theme/colors.dart';
 import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
@@ -436,7 +437,7 @@ class _RevisionConteoPageState extends ConsumerState<RevisionConteoPage> {
   }
 
   Color _getConfianzaColor(double confianza) {
-    if (confianza >= 0.9) return Colors.green;
+    if (confianza >= 0.9) return AppColors.success;
     if (confianza >= 0.8) return Colors.amber;
     return Colors.orange;
   }

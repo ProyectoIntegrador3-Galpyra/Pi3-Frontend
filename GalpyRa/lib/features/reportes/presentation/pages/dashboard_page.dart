@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../config/theme/colors.dart';
 import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../core/widgets/loading.dart';
 import '../../../../core/widgets/error_view.dart';
@@ -109,7 +110,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
           'Alertas',
           '${(datos['alertas'] as List?)?.length ?? 0}',
           Icons.notifications_active,
-          Colors.green,
+          AppColors.success,
         ),
       ],
     );
@@ -183,11 +184,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   padding: EdgeInsets.all(16),
                   child: Column(
                     children: [
-                      Icon(Icons.check_circle, size: 48, color: Colors.green),
+                      Icon(Icons.check_circle, size: 48, color: AppColors.success),
                       SizedBox(height: 8),
                       Text(
                         'Todo en orden',
-                        style: TextStyle(color: Colors.green),
+                        style: TextStyle(color: AppColors.success),
                       ),
                     ],
                   ),

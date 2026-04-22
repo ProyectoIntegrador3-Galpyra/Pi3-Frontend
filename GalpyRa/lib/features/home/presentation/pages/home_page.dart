@@ -60,8 +60,6 @@ class HomePage extends ConsumerWidget {
                       _buildSectionTitle(context, 'Módulos'),
                       const SizedBox(height: 12),
                       _buildMenuGrid(context, ref, crossAxisCount),
-                      const SizedBox(height: 24),
-                      _buildRecentActivity(context),
                     ],
                   ),
                 ),
@@ -78,14 +76,7 @@ class HomePage extends ConsumerWidget {
       preferredSize: const Size.fromHeight(84),
       child: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              AppColors.primary,
-              AppColors.accentGreen,
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: AppColors.primary,
         ),
         child: SafeArea(
           bottom: false,
@@ -284,7 +275,7 @@ class HomePage extends ConsumerWidget {
         Expanded(
           child: _buildStatCard(
             'Aves Activas',
-            '12,500',
+            '—',
             Icons.spa_outlined,
             AppColors.primary,
           ),
@@ -293,9 +284,9 @@ class HomePage extends ConsumerWidget {
         Expanded(
           child: _buildStatCard(
             'Producción Hoy',
-            '285',
+            '—',
             Icons.egg_outlined,
-            AppColors.secondary,
+            AppColors.secondaryDark,
           ),
         ),
       ],
@@ -312,14 +303,7 @@ class HomePage extends ConsumerWidget {
       constraints: const BoxConstraints(minHeight: 100),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            color.withOpacity(0.05),
-            color.withOpacity(0.1),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withOpacity(0.2)),
         boxShadow: [
@@ -376,7 +360,7 @@ class HomePage extends ConsumerWidget {
       _MenuItem(
         'Aves',
         Icons.spa_outlined,
-        AppColors.accentGreen,
+        AppColors.accentLime,
         () => _openModuleWithGalpon(
           context,
           ref,
@@ -387,7 +371,7 @@ class HomePage extends ConsumerWidget {
       _MenuItem(
         'Producción',
         Icons.egg_outlined,
-        AppColors.secondary,
+        AppColors.secondaryDark,
         () => _openModuleWithGalpon(
           context,
           ref,
@@ -420,7 +404,7 @@ class HomePage extends ConsumerWidget {
       _MenuItem(
         'Inventario Foto',
         Icons.camera_alt_outlined,
-        AppColors.accentLime,
+        AppColors.accentYellow,
         () => context.push(RoutePaths.inventarioFoto),
       ),
       _MenuItem(
@@ -440,6 +424,12 @@ class HomePage extends ConsumerWidget {
         Icons.qr_code_scanner_outlined,
         AppColors.primaryDark,
         () => context.push(RoutePaths.trazabilidad),
+      ),
+      _MenuItem(
+        'Admin',
+        Icons.admin_panel_settings_outlined,
+        AppColors.warning,
+        () => context.push(RoutePaths.adminDashboard),
       ),
     ];
 
@@ -467,14 +457,7 @@ class HomePage extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              item.color.withOpacity(0.08),
-              item.color.withOpacity(0.15),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: item.color.withOpacity(0.12),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: item.color.withOpacity(0.25),
@@ -514,95 +497,6 @@ class HomePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildRecentActivity(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Actividad Reciente',
-              style: TextStyle(fontSize: 21, fontWeight: FontWeight.w700),
-            ),
-            TextButton(
-              onPressed: () {
-                // TODO: Ver más
-              },
-              child: const Text('Ver más'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Card(
-          child: Column(
-            children: [
-              _buildActivityItem(
-                'Producción registrada',
-                'Galpón A - 285 huevos',
-                Icons.egg,
-                Colors.orange,
-                'Hace 2 horas',
-              ),
-              const Divider(height: 1),
-              _buildActivityItem(
-                'Alimentación registrada',
-                'Galpón B - 150 kg',
-                Icons.restaurant,
-                Colors.green,
-                'Hace 4 horas',
-              ),
-              const Divider(height: 1),
-              _buildActivityItem(
-                'Vacunación completada',
-                'Galpón C - Newcastle',
-                Icons.vaccines,
-                Colors.blue,
-                'Ayer',
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActivityItem(
-    String titulo,
-    String subtitulo,
-    IconData icon,
-    Color color,
-    String tiempo,
-  ) {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 72),
-      child: ListTile(
-        leading: CircleAvatar(
-          radius: 20,
-          backgroundColor: color.withValues(alpha: 0.14),
-          child: Icon(icon, color: color, size: 28),
-        ),
-        title: Text(
-          titulo,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        subtitle: Text(
-          subtitulo,
-          style: const TextStyle(fontSize: 12),
-        ),
-        trailing: Text(
-          tiempo,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[500],
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class _MenuItem {

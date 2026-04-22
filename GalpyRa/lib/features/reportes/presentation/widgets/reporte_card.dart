@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/reporte.dart';
 import '../../../../core/utils/date_utils.dart' as app_date;
+import '../../../../config/theme/colors.dart';
 
 /// Card para mostrar un reporte en la lista
 class ReporteCard extends StatelessWidget {
@@ -182,7 +183,7 @@ class ReporteCard extends StatelessWidget {
       case TipoReporte.mortalidad:
         return Colors.red;
       case TipoReporte.alimentacion:
-        return Colors.green;
+        return AppColors.success;
       case TipoReporte.sanitario:
         return Colors.blue;
       case TipoReporte.inventario:

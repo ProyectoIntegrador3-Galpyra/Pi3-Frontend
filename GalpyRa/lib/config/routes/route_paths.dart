@@ -45,6 +45,12 @@ class RoutePaths {
   static const String reporteDetail = '/reportes/:id';
   static const String generarReporte = '/reportes/generar';
 
+    // Admin routes
+    static const String adminUsuarios = '/admin/usuarios';
+    static const String adminUsuarioForm = '/admin/usuarios/form';
+    static const String adminReportes = '/admin/reportes';
+    static const String adminDashboard = '/admin/dashboard';
+
   // Trazabilidad routes
   static const String trazabilidad = '/trazabilidad';
 
@@ -55,6 +61,7 @@ class RoutePaths {
   static String galponDetailPath(String id) => '/galpones/$id';
   static String galponEditPath(String id) => '/galpones/$id/edit';
   static String reporteDetailPath(String id) => '/reportes/$id';
+    static String adminUsuarioEditPath(String id) => '/admin/usuarios/$id/edit';
 
   // Aves helpers
   static String avesPath(String galponId) => '/aves/$galponId';

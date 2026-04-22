@@ -50,6 +50,12 @@ import '../../features/trazabilidad/presentation/pages/trazabilidad_page.dart';
 // Settings
 import '../../features/settings/presentation/pages/settings_page.dart';
 
+// Admin
+import '../../features/admin/presentation/pages/admin_usuarios_page.dart';
+import '../../features/admin/presentation/pages/admin_usuario_form_page.dart';
+import '../../features/admin/presentation/pages/admin_reportes_page.dart';
+import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
+
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authControllerProvider);
 
@@ -249,6 +255,35 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RoutePaths.dashboard,
         name: 'dashboard',
         builder: (context, state) => const DashboardPage(),
+      ),
+
+      // Admin routes
+      GoRoute(
+        path: RoutePaths.adminUsuarios,
+        name: 'adminUsuarios',
+        builder: (context, state) => const AdminUsuariosPage(),
+      ),
+      GoRoute(
+        path: RoutePaths.adminUsuarioForm,
+        name: 'adminUsuarioForm',
+        builder: (context, state) => const AdminUsuarioFormPage(),
+      ),
+      GoRoute(
+        path: '/admin/usuarios/:id/edit',
+        name: 'adminUsuarioEdit',
+        builder: (context, state) {
+          return AdminUsuarioFormPage(userId: state.pathParameters['id']);
+        },
+      ),
+      GoRoute(
+        path: RoutePaths.adminReportes,
+        name: 'adminReportes',
+        builder: (context, state) => const AdminReportesPage(),
+      ),
+      GoRoute(
+        path: RoutePaths.adminDashboard,
+        name: 'adminDashboard',
+        builder: (context, state) => const AdminDashboardPage(),
       ),
 
       // Trazabilidad routes

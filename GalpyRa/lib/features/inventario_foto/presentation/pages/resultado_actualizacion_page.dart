@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../config/routes/route_paths.dart';
+import '../../../../config/theme/colors.dart';
 import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/loading.dart';
@@ -224,13 +225,13 @@ class _ResultadoActualizacionPageState
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.1),
+                color: AppColors.success.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.check_circle,
                 size: 80,
-                color: Colors.green,
+                color: AppColors.success,
               ),
             ),
             const SizedBox(height: 32),

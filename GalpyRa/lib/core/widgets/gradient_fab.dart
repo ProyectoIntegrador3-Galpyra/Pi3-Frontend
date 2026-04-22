@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../config/theme/colors.dart';
 
-/// Custom FloatingActionButton with gradient background
+/// Custom FloatingActionButton with solid background
 class GradientFAB extends StatelessWidget {
   const GradientFAB({
     super.key,
@@ -20,23 +20,15 @@ class GradientFAB extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = gradientColors ?? [
-      AppColors.primary,
-      AppColors.accentGreen,
-      AppColors.accentLime,
-    ];
+    final backgroundColor = gradientColors?.first ?? AppColors.primary;
 
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: colors,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: backgroundColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.4),
+            color: backgroundColor.withOpacity(0.3),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -78,7 +70,7 @@ class GradientFAB extends StatelessWidget {
   }
 }
 
-/// Gradient FAB with yellow-green theme variant
+/// Solid FAB with soft yellow variant
 class GradientFABSecondary extends StatelessWidget {
   const GradientFABSecondary({
     super.key,
@@ -102,8 +94,6 @@ class GradientFABSecondary extends StatelessWidget {
       heroTag: heroTag,
       gradientColors: [
         AppColors.secondary,
-        AppColors.secondaryLight,
-        AppColors.accentYellow,
       ],
     );
   }
@@ -133,8 +123,6 @@ class GradientFABWarning extends StatelessWidget {
       heroTag: heroTag,
       gradientColors: [
         AppColors.warning,
-        const Color(0xFFFF8F00),
-        AppColors.secondaryDark,
       ],
     );
   }

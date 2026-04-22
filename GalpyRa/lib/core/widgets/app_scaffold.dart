@@ -19,7 +19,7 @@ class AppScaffold extends StatelessWidget {
     this.resizeToAvoidBottomInset = true,
     this.appBarElevation = 0,
     this.onBackPressed,
-    this.useGradientAppBar = true,
+    this.useGradientAppBar = false,
   });
 
   final Widget body;
@@ -59,14 +59,7 @@ class AppScaffold extends StatelessWidget {
         preferredSize: const Size.fromHeight(kToolbarHeight),
         child: Container(
           decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppColors.primary,
-                AppColors.accentGreen,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: AppColors.primary,
           ),
           child: AppBar(
             title: titleWidget ?? Text(title!),

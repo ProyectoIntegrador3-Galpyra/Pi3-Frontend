@@ -36,7 +36,7 @@ class UserModel extends User {
       email: email,
       name: name,
       phone: json['phone'] as String?,
-      role: UserRoleExtension.fromString(roleValue),
+      role: UserRole.fromString(roleValue),
       avatarUrl: json['avatar_url'] as String?,
       createdAt: createdAt,
       updatedAt: updatedAtRaw is String && updatedAtRaw.isNotEmpty

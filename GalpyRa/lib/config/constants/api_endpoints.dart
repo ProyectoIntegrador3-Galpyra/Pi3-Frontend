@@ -58,6 +58,15 @@ class ApiEndpoints {
   static const String generarReporte = '/api/reportes/generar';
   static String reporteById(String id) => '/api/reportes/$id';
 
+  // Admin endpoints
+  static const String adminUsers = '/api/admin/users';
+  static String adminUserById(String id) => '/api/admin/users/$id';
+  static const String reportesProduccion = '/api/reportes/produccion';
+  static const String reportesAlimentacion = '/api/reportes/alimentacion';
+  static const String reportesMortalidad = '/api/reportes/mortalidad';
+  static const String reportesInventario = '/api/reportes/inventario';
+  static const String adminDashboard = '/api/admin/dashboard';
+
   // Trazabilidad endpoints
   static const String trazabilidadToken = '/api/trazabilidad/token';
   static String trazabilidadPublica(String token) => '/api/trazabilidad/$token';
