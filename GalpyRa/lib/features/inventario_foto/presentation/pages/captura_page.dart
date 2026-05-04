@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../config/routes/route_paths.dart';
 import '../../../../core/widgets/app_scaffold.dart';
-import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/loading.dart';
 import '../controllers/inventario_foto_controller.dart';
 
@@ -118,180 +118,228 @@ class _CapturaPageState extends ConsumerState<CapturaPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(inventarioFotoControllerProvider);
 
-    return AppScaffold(
-      title: 'Capturar Inventario',
-      body: state.isProcesando
-          ? const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Loading(),
-                  SizedBox(height: 24),
-                  Text(
-                    'Procesando imagen...',
-                    style: TextStyle(fontSize: 18),
+    final body = state.isProcesando
+        ? const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Loading(),
+                SizedBox(height: 24),
+                Text(
+                  'Procesando imagen...',
+                  style: TextStyle(fontSize: 18),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Esto puede tomar unos segundos',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ],
+            ),
+          )
+        : SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Instructions
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'Instrucciones',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          '• Capture una foto clara del galpón\n'
+                          '• Asegúrese de buena iluminación\n'
+                          '• Incluya la mayor cantidad de aves visibles\n'
+                          '• Evite fotos borrosas o con movimiento',
+                        ),
+                      ],
+                    ),
                   ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Esto puede tomar unos segundos',
-                    style: TextStyle(color: Colors.grey),
+                ),
+                const SizedBox(height: 24),
+
+                // Image preview
+                Container(
+                  height: 300,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey[300]!),
                   ),
-                ],
-              ),
-            )
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Instructions
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
+                  child: _imageBytes != null
+                      ? Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              // Image.memory funciona en web y móvil sin dart:io
+                              child:
+                                  Image.memory(_imageBytes!, fit: BoxFit.cover),
+                            ),
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _imageBytes = null;
+                                    _imagePath = null;
+                                  });
+                                  ref
+                                      .read(inventarioFotoControllerProvider
+                                          .notifier)
+                                      .reiniciarConteo();
+                                },
+                                icon: const Icon(Icons.close),
+                                style: IconButton.styleFrom(
+                                  backgroundColor: Colors.black54,
+                                  foregroundColor: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
-                                Icons.info_outline,
-                                color: Theme.of(context).primaryColor,
+                                Icons.camera_alt_outlined,
+                                size: 64,
+                                color: Colors.grey[400],
                               ),
-                              const SizedBox(width: 8),
-                              const Text(
-                                'Instrucciones',
+                              const SizedBox(height: 16),
+                              Text(
+                                'Sin imagen',
                                 style: TextStyle(
-                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey[600],
                                   fontSize: 16,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            '• Capture una foto clara del galpón\n'
-                            '• Asegúrese de buena iluminación\n'
-                            '• Incluya la mayor cantidad de aves visibles\n'
-                            '• Evite fotos borrosas o con movimiento',
-                          ),
-                        ],
+                        ),
+                ),
+                const SizedBox(height: 24),
+
+                // Capture buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _isCapturing ? null : _captureFromCamera,
+                        icon: const Icon(Icons.camera_alt),
+                        label: const Text('Cámara'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _isCapturing ? null : _pickFromGallery,
+                        icon: const Icon(Icons.photo_library),
+                        label: const Text('Galería'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 32),
 
-                  // Image preview
+                // Error message
+                if (state.errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Text(
+                      state.errorMessage!,
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+
+                // Process button
+                if (_imagePath == null)
                   Container(
-                    height: 300,
+                    width: double.infinity,
+                    height: 60,
                     decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey[300]!),
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.grey.shade300),
                     ),
-                    child: _imageBytes != null
-                        ? Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                // Image.memory funciona en web y móvil sin dart:io
-                                child: Image.memory(_imageBytes!,
-                                    fit: BoxFit.cover),
-                              ),
-                              Positioned(
-                                top: 8,
-                                right: 8,
-                                child: IconButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      _imageBytes = null;
-                                      _imagePath = null;
-                                    });
-                                    ref
-                                        .read(inventarioFotoControllerProvider
-                                            .notifier)
-                                        .reiniciarConteo();
-                                  },
-                                  icon: const Icon(Icons.close),
-                                  style: IconButton.styleFrom(
-                                    backgroundColor: Colors.black54,
-                                    foregroundColor: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          )
-                        : Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.camera_alt_outlined,
-                                  size: 64,
-                                  color: Colors.grey[400],
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Sin imagen',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Capture buttons
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: _isCapturing ? null : _captureFromCamera,
-                          icon: const Icon(Icons.camera_alt),
-                          label: const Text('Cámara'),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.auto_awesome,
+                            color: Colors.grey.shade400, size: 22),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Selecciona una imagen primero',
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 15,
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: _isCapturing ? null : _pickFromGallery,
-                          icon: const Icon(Icons.photo_library),
-                          label: const Text('Galería'),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 32),
-
-                  // Error message
-                  if (state.errorMessage != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: Text(
-                        state.errorMessage!,
-                        style: const TextStyle(color: Colors.red),
-                        textAlign: TextAlign.center,
+                      ],
+                    ),
+                  )
+                else
+                  ElevatedButton.icon(
+                    onPressed: _procesarImagen,
+                    icon: const Icon(Icons.auto_awesome,
+                        color: Colors.white, size: 22),
+                    label: const Text(
+                      'Procesar imagen con IA',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-
-                  // Process button
-                  AppButton(
-                    text: 'Procesar Imagen',
-                    onPressed: _imagePath != null ? _procesarImagen : null,
-                    icon: Icons.auto_fix_high,
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 60),
+                      backgroundColor: const Color(0xFFD4920A),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 3,
+                      shadowColor: const Color(0xFFD4920A).withOpacity(0.4),
+                    ),
                   ),
-                ],
-              ),
+              ],
             ),
+          );
+
+    return AppScaffold(
+      title: 'Capturar Inventario',
+      body: body
+          .animate()
+          .fadeIn(duration: 200.ms)
+          .slideY(begin: 0.04, end: 0, duration: 200.ms, curve: Curves.easeOut),
     );
   }
 }

@@ -9,6 +9,9 @@ class Galpon extends Equatable {
   final int cantidadActual;
   final String? ubicacion;
   final bool activo;
+  final int cantidadAvesActuales;
+  final int cantidadLotesActivos;
+  final int espacioDisponible;
   // Campos de control offline
   final bool sincronizado;
   final DateTime createdAt;
@@ -23,6 +26,9 @@ class Galpon extends Equatable {
     this.cantidadActual = 0,
     this.ubicacion,
     this.activo = true,
+    this.cantidadAvesActuales = 0,
+    this.cantidadLotesActivos = 0,
+    this.espacioDisponible = 0,
     this.sincronizado = false,
     required this.createdAt,
     required this.updatedAt,
@@ -47,6 +53,9 @@ class Galpon extends Equatable {
         cantidadActual,
         ubicacion,
         activo,
+        cantidadAvesActuales,
+        cantidadLotesActivos,
+        espacioDisponible,
         sincronizado,
         createdAt,
         updatedAt,
@@ -61,6 +70,9 @@ class Galpon extends Equatable {
     int? cantidadActual,
     String? ubicacion,
     bool? activo,
+    int? cantidadAvesActuales,
+    int? cantidadLotesActivos,
+    int? espacioDisponible,
     bool? sincronizado,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -74,6 +86,9 @@ class Galpon extends Equatable {
       cantidadActual: cantidadActual ?? this.cantidadActual,
       ubicacion: ubicacion ?? this.ubicacion,
       activo: activo ?? this.activo,
+      cantidadAvesActuales: cantidadAvesActuales ?? this.cantidadAvesActuales,
+      cantidadLotesActivos: cantidadLotesActivos ?? this.cantidadLotesActivos,
+      espacioDisponible: espacioDisponible ?? this.espacioDisponible,
       sincronizado: sincronizado ?? this.sincronizado,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

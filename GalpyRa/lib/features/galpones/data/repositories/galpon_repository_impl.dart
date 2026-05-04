@@ -91,4 +91,17 @@ class GalponRepositoryImpl implements GalponRepository {
       return const Left(UnknownFailure());
     }
   }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> obtenerTurnoActivo(
+      String id) async {
+    try {
+      final turno = await _remoteDataSource.obtenerTurnoActivo(id);
+      return Right(turno);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
+    } catch (e) {
+      return Left(ServerFailure(message: 'Error al obtener turno activo: $e'));
+    }
+  }
 }

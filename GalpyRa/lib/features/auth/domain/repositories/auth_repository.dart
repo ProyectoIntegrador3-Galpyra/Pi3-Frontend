@@ -10,6 +10,15 @@ abstract class AuthRepository {
     required String password,
   });
 
+  /// Send password recovery email
+  Future<Either<Failure, void>> forgotPassword({required String email});
+
+  /// Reset password with deep-link token
+  Future<Either<Failure, void>> resetPassword({
+    required String token,
+    required String nuevaPassword,
+  });
+
   /// Logout current user
   Future<Either<Failure, void>> logout();
 

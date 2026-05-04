@@ -7,6 +7,8 @@ import '../../features/auth/presentation/controllers/auth_controller.dart';
 
 // Auth
 import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/auth/presentation/pages/forgot_password_page.dart';
+import '../../features/auth/presentation/pages/reset_password_page.dart';
 import '../../features/auth/presentation/pages/profile_page.dart';
 
 // Home
@@ -47,8 +49,17 @@ import '../../features/reportes/presentation/pages/dashboard_page.dart';
 // Trazabilidad
 import '../../features/trazabilidad/presentation/pages/trazabilidad_page.dart';
 
+// Scanner
+import '../../core/pages/qr_scanner_page.dart';
+
+// Galpon QR
+import '../../features/galpones/presentation/pages/galpon_qr_page.dart';
+
 // Settings
 import '../../features/settings/presentation/pages/settings_page.dart';
+
+// Notifications
+import '../../features/notifications/presentation/pages/notifications_page.dart';
 
 // Admin
 import '../../features/admin/presentation/pages/admin_usuarios_page.dart';
@@ -81,11 +92,29 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
     ),
     routes: [
+      GoRoute(
+        path: '/',
+        redirect: (context, state) => RoutePaths.home,
+      ),
+
       // Auth routes
       GoRoute(
         path: RoutePaths.login,
         name: 'login',
         builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: RoutePaths.forgotPassword,
+        name: 'forgotPassword',
+        builder: (context, state) => const ForgotPasswordPage(),
+      ),
+      GoRoute(
+        path: RoutePaths.resetPassword,
+        name: 'resetPassword',
+        builder: (context, state) {
+          final token = state.pathParameters['token']!;
+          return ResetPasswordPage(token: token);
+        },
       ),
       GoRoute(
         path: RoutePaths.profile,
@@ -293,11 +322,40 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const TrazabilidadPage(),
       ),
 
+      // QR Scanner route
+      GoRoute(
+        path: RoutePaths.qrScanner,
+        name: 'qrScanner',
+        builder: (context, state) => const QrScannerPage(),
+      ),
+
+      // Galpon QR route
+      GoRoute(
+        path: RoutePaths.galponQr,
+        name: 'galponQr',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          final extra = state.extra as Map<String, String?>?;
+          return GalponQrPage(
+            galponId: id,
+            galponNombre: extra?['nombre'] ?? 'Galpón',
+            galponUbicacion: extra?['ubicacion'],
+          );
+        },
+      ),
+
       // Settings routes
       GoRoute(
         path: RoutePaths.settings,
         name: 'settings',
         builder: (context, state) => const SettingsPage(),
+      ),
+
+      // Notifications routes
+      GoRoute(
+        path: RoutePaths.notifications,
+        name: 'notifications',
+        builder: (context, state) => const NotificationsPage(),
       ),
     ],
     redirect: (context, state) {
@@ -305,8 +363,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isLoginRoute = state.matchedLocation == RoutePaths.login;
 
       // Rutas públicas que no requieren autenticación
-      const publicRoutes = [RoutePaths.login, RoutePaths.trazabilidad];
-      final isPublicRoute = publicRoutes.contains(state.matchedLocation);
+      const publicRoutes = [
+        RoutePaths.login,
+        RoutePaths.trazabilidad,
+        RoutePaths.forgotPassword,
+      ];
+      final isResetPasswordRoute =
+          state.uri.path.startsWith('/reset-password/');
+      final isPublicRoute =
+          publicRoutes.contains(state.matchedLocation) || isResetPasswordRoute;
 
       // Si no está autenticado y no está en una ruta pública, redirigir a login
       if (!isLoggedIn && !isPublicRoute) {

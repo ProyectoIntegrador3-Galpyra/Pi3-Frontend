@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../config/di/injector.dart';
 import '../../../../core/errors/failure_message_mapper.dart';
 import '../../domain/entities/galpon.dart';
+import '../../domain/repositories/galpon_repository.dart';
 import '../../domain/usecases/listar_galpones.dart';
 import '../../domain/usecases/crear_galpon.dart';
 import '../../domain/usecases/editar_galpon.dart';
@@ -147,6 +148,18 @@ class GalponesController extends StateNotifier<GalponesState> {
         );
         return true;
       },
+    );
+  }
+
+  Future<Map<String, dynamic>?> getTurnoActivo(String id) async {
+    final result = await getIt<GalponRepository>().obtenerTurnoActivo(id);
+
+    return result.fold(
+      (failure) {
+        state = state.copyWith(error: mapFailureMessage(failure));
+        return null;
+      },
+      (turno) => turno,
     );
   }
 

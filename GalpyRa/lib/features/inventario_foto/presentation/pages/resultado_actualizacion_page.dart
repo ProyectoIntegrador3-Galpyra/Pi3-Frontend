@@ -5,10 +5,9 @@ import '../../../../config/routes/route_paths.dart';
 import '../../../../config/theme/colors.dart';
 import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../core/widgets/app_button.dart';
-import '../../../../core/widgets/loading.dart';
 import '../controllers/inventario_foto_controller.dart';
+import '../../../galpones/presentation/controllers/galpones_controller.dart';
 
-/// Página de resultado de actualización de inventario
 class ResultadoActualizacionPage extends ConsumerStatefulWidget {
   final String galponId;
 
@@ -21,252 +20,198 @@ class ResultadoActualizacionPage extends ConsumerStatefulWidget {
 
 class _ResultadoActualizacionPageState
     extends ConsumerState<ResultadoActualizacionPage> {
-  bool _confirmado = false;
-
-  Future<void> _confirmarActualizacion() async {
-    final conteo = ref.read(inventarioFotoControllerProvider).conteoActual;
-    if (conteo == null) return;
-
-    final cantidadFinal = conteo.conteoFinal ?? conteo.conteoAutomatico ?? 0;
-    final success = await ref
-        .read(inventarioFotoControllerProvider.notifier)
-        .confirmarInventario(cantidadFinal);
-
-    if (success && mounted) {
-      setState(() => _confirmado = true);
-    }
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.read(galponesControllerProvider.notifier).obtenerGalpon(widget.galponId);
+    });
   }
 
-  void _finalizarProceso() {
-    // Reset state and go back to galpones
+  void _finalizar() {
     ref.read(inventarioFotoControllerProvider.notifier).reiniciarConteo();
-    context.go(RoutePaths.galpones);
+    context.go(RoutePaths.galponDetailPath(widget.galponId));
   }
 
-  void _realizarOtroConteo() {
+  void _otroConteo() {
     ref.read(inventarioFotoControllerProvider.notifier).reiniciarConteo();
-    context.pop();
-    context.pop(); // Back to captura page
+    context.go(RoutePaths.capturaPath(widget.galponId));
   }
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(inventarioFotoControllerProvider);
-    final conteo = state.conteoActual;
+    final conteo = ref.watch(inventarioFotoControllerProvider).conteoActual;
+    final galpon = ref.watch(galponesControllerProvider).selectedGalpon;
 
-    if (conteo == null) {
-      return AppScaffold(
-        title: 'Resultado',
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 64, color: Colors.grey),
-              const SizedBox(height: 16),
-              const Text('No hay datos de conteo'),
-              const SizedBox(height: 24),
-              AppButton(
-                text: 'Volver',
-                onPressed: () => context.go(RoutePaths.galpones),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
+    final conteoFinal = conteo?.conteoFinal ?? conteo?.conteoManual ?? conteo?.conteoAutomatico ?? 0;
+    final avesRegistradas = galpon?.cantidadActual ?? galpon?.cantidadAvesActuales ?? 0;
+    final diferencia = avesRegistradas - conteoFinal;
+    final hayDiferencia = diferencia != 0;
+    final faltanAves = diferencia > 0;
 
     return AppScaffold(
-      title: 'Resultado',
-      body: state.isLoading
-          ? const Loading(message: 'Actualizando inventario...')
-          : _confirmado
-              ? _buildSuccessView(context)
-              : _buildConfirmationView(context, state, conteo),
-    );
-  }
-
-  Widget _buildConfirmationView(
-    BuildContext context,
-    InventarioFotoState state,
-    dynamic conteo,
-  ) {
-    final conteoFinal = conteo.conteoFinal ??
-        conteo.conteoManual ??
-        conteo.conteoAutomatico ??
-        0;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Summary card
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  const Icon(
-                    Icons.fact_check,
-                    size: 64,
-                    color: Colors.blue,
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Resumen del Conteo',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  _buildInfoRow(
-                    'Galpón',
-                    widget.galponId,
-                    Icons.home_work,
-                  ),
-                  const Divider(),
-                  _buildInfoRow(
-                    'Conteo Automático',
-                    '${conteo.conteoAutomatico ?? "-"} aves',
-                    Icons.auto_fix_high,
-                  ),
-                  if (conteo.conteoManual != null &&
-                      conteo.conteoManual != conteo.conteoAutomatico) ...[
-                    const Divider(),
-                    _buildInfoRow(
-                      'Conteo Manual',
-                      '${conteo.conteoManual} aves',
-                      Icons.edit,
-                    ),
-                  ],
-                  const Divider(),
-                  _buildInfoRow(
-                    'Conteo Final',
-                    '$conteoFinal aves',
-                    Icons.check_circle,
-                    highlight: true,
-                  ),
-                  if (conteo.confianza != null) ...[
-                    const Divider(),
-                    _buildInfoRow(
-                      'Confianza',
-                      '${(conteo.confianza * 100).toStringAsFixed(1)}%',
-                      Icons.analytics,
-                    ),
-                  ],
-                  const Divider(),
-                  _buildInfoRow(
-                    'Fecha',
-                    _formatDate(conteo.fechaConteo),
-                    Icons.calendar_today,
-                  ),
-                ],
+      title: 'Resultado del Inventario',
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Icono de resultado
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: (hayDiferencia ? AppColors.warning : AppColors.success)
+                      .withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  hayDiferencia ? Icons.warning_amber_rounded : Icons.check_circle,
+                  size: 72,
+                  color: hayDiferencia ? AppColors.warning : AppColors.success,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 24),
+            const SizedBox(height: 16),
+            Center(
+              child: Text(
+                hayDiferencia
+                    ? (faltanAves ? 'Faltan aves en el galpón' : 'Exceso detectado')
+                    : '¡Conteo completo!',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: hayDiferencia ? AppColors.warning : AppColors.success,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 24),
 
-          // Warning if difference is significant
-          if (conteo.conteoManual != null &&
-              conteo.conteoAutomatico != null &&
-              _getDiferenciaPorcentaje(conteo) > 10)
+            // Card comparación
             Card(
-              color: Colors.orange.withValues(alpha: 0.1),
               child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
+                padding: const EdgeInsets.all(20),
+                child: Column(
                   children: [
-                    const Icon(Icons.warning, color: Colors.orange),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'La diferencia entre el conteo automático y manual es significativa (${_getDiferenciaPorcentaje(conteo).toStringAsFixed(1)}%). Verifique los datos antes de confirmar.',
-                        style: const TextStyle(color: Colors.orange),
+                    Text(
+                      galpon?.nombre ?? 'Galpón',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryDark,
                       ),
                     ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _statBox(
+                            'Aves registradas',
+                            '$avesRegistradas',
+                            Icons.spa_outlined,
+                            AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _statBox(
+                            'Detectadas por IA',
+                            '$conteoFinal',
+                            Icons.camera_alt_outlined,
+                            AppColors.primaryDark,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (hayDiferencia) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 12, horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: (faltanAves ? AppColors.error : AppColors.warning)
+                              .withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: (faltanAves ? AppColors.error : AppColors.warning)
+                                .withOpacity(0.3),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              faltanAves ? Icons.arrow_downward : Icons.arrow_upward,
+                              color: faltanAves ? AppColors.error : AppColors.warning,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              faltanAves
+                                  ? 'Faltan ${diferencia.abs()} aves'
+                                  : 'Exceso de ${diferencia.abs()} aves',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: faltanAves ? AppColors.error : AppColors.warning,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
             ),
-          const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
-          // Error
-          if (state.errorMessage != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Text(
-                state.errorMessage!,
-                style: const TextStyle(color: Colors.red),
-                textAlign: TextAlign.center,
+            // Detalles del conteo
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Detalle del conteo',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                    const SizedBox(height: 12),
+                    if (conteo?.conteoAutomatico != null)
+                      _infoRow('Conteo automático IA',
+                          '${conteo!.conteoAutomatico} aves',
+                          Icons.auto_fix_high),
+                    if (conteo?.conteoManual != null &&
+                        conteo!.conteoManual != conteo.conteoAutomatico)
+                      _infoRow('Conteo manual corregido',
+                          '${conteo.conteoManual} aves', Icons.edit),
+                    _infoRow('Conteo final', '$conteoFinal aves',
+                        Icons.check_circle, highlight: true),
+                    if (conteo?.confianza != null)
+                      _infoRow(
+                        'Confianza IA',
+                        '${((conteo!.confianza!) * 100).toStringAsFixed(1)}%',
+                        Icons.analytics,
+                      ),
+                  ],
+                ),
               ),
             ),
+            const SizedBox(height: 24),
 
-          // Action buttons
-          AppButton(
-            text: 'Confirmar y Actualizar Inventario',
-            onPressed: _confirmarActualizacion,
-            icon: Icons.update,
-          ),
-          const SizedBox(height: 12),
-          OutlinedButton(
-            onPressed: () => context.pop(),
-            child: const Text('Revisar Nuevamente'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSuccessView(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: AppColors.success.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.check_circle,
-                size: 80,
-                color: AppColors.success,
-              ),
-            ),
-            const SizedBox(height: 32),
-            const Text(
-              '¡Inventario Actualizado!',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+            AppButton(
+              text: 'Ver detalle del galpón',
+              onPressed: _finalizar,
+              icon: Icons.home_work_outlined,
             ),
             const SizedBox(height: 12),
-            Text(
-              'El inventario del galpón ${widget.galponId} ha sido actualizado correctamente.',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
-            ),
-            const SizedBox(height: 48),
-            SizedBox(
-              width: double.infinity,
-              child: AppButton(
-                text: 'Finalizar',
-                onPressed: _finalizarProceso,
-                icon: Icons.done_all,
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextButton(
-              onPressed: _realizarOtroConteo,
-              child: const Text('Realizar Otro Conteo'),
+            OutlinedButton.icon(
+              onPressed: _otroConteo,
+              icon: const Icon(Icons.camera_alt_outlined),
+              label: const Text('Realizar otro conteo'),
             ),
           ],
         ),
@@ -274,48 +219,59 @@ class _ResultadoActualizacionPageState
     );
   }
 
-  Widget _buildInfoRow(
-    String label,
-    String value,
-    IconData icon, {
-    bool highlight = false,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
+  Widget _statBox(String label, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Column(
         children: [
-          Icon(icon, size: 20, color: Colors.grey),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(color: Colors.grey),
-            ),
-          ),
+          Icon(icon, color: color, size: 24),
+          const SizedBox(height: 8),
           Text(
             value,
             style: TextStyle(
-              fontWeight: highlight ? FontWeight.bold : FontWeight.w500,
-              fontSize: highlight ? 18 : 14,
-              color: highlight ? Theme.of(context).primaryColor : null,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: color,
             ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
     );
   }
 
-  String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
-  }
-
-  double _getDiferenciaPorcentaje(dynamic conteo) {
-    if (conteo.conteoAutomatico == null ||
-        conteo.conteoManual == null ||
-        conteo.conteoAutomatico == 0) {
-      return 0;
-    }
-    final diferencia = (conteo.conteoManual - conteo.conteoAutomatico).abs();
-    return (diferencia / conteo.conteoAutomatico) * 100;
+  Widget _infoRow(String label, String value, IconData icon,
+      {bool highlight = false}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: AppColors.textSecondary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(label,
+                style: const TextStyle(color: AppColors.textSecondary)),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: highlight ? FontWeight.bold : FontWeight.w500,
+              fontSize: highlight ? 16 : 14,
+              color: highlight ? AppColors.primaryDark : null,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -1,5 +1,16 @@
 import 'package:equatable/equatable.dart';
 
+int _asInt(dynamic value) {
+  if (value is num) return value.toInt();
+  return int.tryParse((value ?? '').toString().trim()) ?? 0;
+}
+
+double _asDouble(dynamic value) {
+  if (value is num) return value.toDouble();
+  final normalized = (value ?? '').toString().trim().replaceAll(',', '.');
+  return double.tryParse(normalized) ?? 0;
+}
+
 class ReporteProduccionItem extends Equatable {
   final String periodo;
   final int totalHuevos;
@@ -14,8 +25,8 @@ class ReporteProduccionItem extends Equatable {
   factory ReporteProduccionItem.fromJson(Map<String, dynamic> json) {
     return ReporteProduccionItem(
       periodo: (json['periodo'] ?? '').toString(),
-      totalHuevos: (json['total_huevos'] as num?)?.toInt() ?? 0,
-      promedioDiario: (json['promedio_diario'] as num?)?.toDouble() ?? 0,
+      totalHuevos: _asInt(json['total_huevos']),
+      promedioDiario: _asDouble(json['promedio_diario']),
     );
   }
 
@@ -37,8 +48,8 @@ class ReporteAlimentacionItem extends Equatable {
   factory ReporteAlimentacionItem.fromJson(Map<String, dynamic> json) {
     return ReporteAlimentacionItem(
       periodo: (json['periodo'] ?? '').toString(),
-      totalKg: (json['total_kg'] as num?)?.toDouble() ?? 0,
-      costoTotal: (json['costo_total'] as num?)?.toDouble() ?? 0,
+      totalKg: _asDouble(json['total_kg']),
+      costoTotal: _asDouble(json['costo_total']),
     );
   }
 
@@ -60,8 +71,8 @@ class ReporteMortalidadItem extends Equatable {
   factory ReporteMortalidadItem.fromJson(Map<String, dynamic> json) {
     return ReporteMortalidadItem(
       periodo: (json['periodo'] ?? '').toString(),
-      totalBajas: (json['total_bajas'] as num?)?.toInt() ?? 0,
-      tasaMortalidad: (json['tasa_mortalidad'] as num?)?.toDouble() ?? 0,
+      totalBajas: _asInt(json['total_bajas']),
+      tasaMortalidad: _asDouble(json['tasa_mortalidad']),
     );
   }
 
@@ -85,9 +96,9 @@ class ReporteInventarioItem extends Equatable {
   factory ReporteInventarioItem.fromJson(Map<String, dynamic> json) {
     return ReporteInventarioItem(
       galpon: (json['galpon'] ?? '').toString(),
-      avesIniciales: (json['aves_iniciales'] as num?)?.toInt() ?? 0,
-      bajas: (json['bajas'] as num?)?.toInt() ?? 0,
-      avesActuales: (json['aves_actuales'] as num?)?.toInt() ?? 0,
+      avesIniciales: _asInt(json['aves_iniciales']),
+      bajas: _asInt(json['bajas']),
+      avesActuales: _asInt(json['aves_actuales']),
     );
   }
 

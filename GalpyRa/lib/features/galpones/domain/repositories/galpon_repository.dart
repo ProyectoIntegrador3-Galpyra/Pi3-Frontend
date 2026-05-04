@@ -9,4 +9,5 @@ abstract class GalponRepository {
   Future<Either<Failure, Galpon>> crearGalpon(Galpon galpon);
   Future<Either<Failure, Galpon>> editarGalpon(Galpon galpon);
   Future<Either<Failure, void>> eliminarGalpon(String id);
+  Future<Either<Failure, Map<String, dynamic>>> obtenerTurnoActivo(String id);
 }

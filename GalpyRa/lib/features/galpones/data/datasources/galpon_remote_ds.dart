@@ -15,6 +15,7 @@ abstract class GalponRemoteDataSource {
   Future<GalponModel> crearGalpon(GalponModel galpon);
   Future<GalponModel> editarGalpon(GalponModel galpon);
   Future<void> eliminarGalpon(String id);
+  Future<Map<String, dynamic>> obtenerTurnoActivo(String id);
 }
 
 /// Galpon remote data source implementation
@@ -133,6 +134,25 @@ class GalponRemoteDataSourceImpl implements GalponRemoteDataSource {
     } catch (e) {
       throw ServerException(
         message: 'Error al eliminar galpon',
+        originalException: e,
+      );
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> obtenerTurnoActivo(String id) async {
+    try {
+      final response =
+          await _httpClient.get('${ApiEndpoints.galponById(id)}/turno-activo');
+      return ApiResponseParser.extractDataMap(response.data);
+    } on DioException catch (e) {
+      throw ApiResponseParser.toServerException(
+        e,
+        fallbackMessage: 'Error al obtener turno activo',
+      );
+    } catch (e) {
+      throw ServerException(
+        message: 'Error al obtener turno activo',
         originalException: e,
       );
     }

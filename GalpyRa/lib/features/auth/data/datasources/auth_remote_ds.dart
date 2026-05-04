@@ -13,6 +13,11 @@ abstract class AuthRemoteDataSource {
     required String email,
     required String password,
   });
+  Future<void> forgotPassword({required String email});
+  Future<void> resetPassword({
+    required String token,
+    required String nuevaPassword,
+  });
   Future<void> logout();
   Future<UserModel> getProfile();
 }
@@ -41,8 +46,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       final responseData = response.data;
       if (!ApiResponseParser.isSuccess(responseData)) {
         throw ServerException(
-          message: ApiResponseParser.extractMessage(responseData, fallback: 'Credenciales invalidas'),
-          statusCode: ApiResponseParser.extractStatusCode(responseData) ?? response.statusCode,
+          message: ApiResponseParser.extractMessage(responseData,
+              fallback: 'Credenciales invalidas'),
+          statusCode: ApiResponseParser.extractStatusCode(responseData) ??
+              response.statusCode,
         );
       }
 
@@ -54,7 +61,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         'token_type': data['token_type'],
       };
     } on DioException catch (e) {
-      throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al iniciar sesion');
+      throw ApiResponseParser.toServerException(e,
+          fallbackMessage: 'Error al iniciar sesion');
     } catch (e) {
       if (e is ServerException) rethrow;
       throw ServerException(
@@ -65,9 +73,69 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
+  Future<void> forgotPassword({required String email}) async {
+    try {
+      await _httpClient.post(
+        '/api/auth/forgot-password',
+        data: {'email': email},
+      );
+    } on DioException catch (e) {
+      throw ApiResponseParser.toServerException(
+        e,
+        fallbackMessage: 'Error al enviar recuperación de contraseña',
+      );
+    } catch (e) {
+      throw ServerException(
+        message: 'Error al enviar recuperación de contraseña',
+        originalException: e,
+      );
+    }
+  }
+
+  @override
+  Future<void> resetPassword({
+    required String token,
+    required String nuevaPassword,
+  }) async {
+    try {
+      final response = await _httpClient.post(
+        ApiEndpoints.resetPassword,
+        data: {
+          'token': token,
+          'nueva_password': nuevaPassword,
+        },
+      );
+
+      final responseData = response.data;
+      if (!ApiResponseParser.isSuccess(responseData)) {
+        throw ServerException(
+          message: ApiResponseParser.extractMessage(
+            responseData,
+            fallback: 'El enlace expiró o ya fue usado',
+          ),
+          statusCode: ApiResponseParser.extractStatusCode(responseData) ??
+              response.statusCode,
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiResponseParser.toServerException(
+        e,
+        fallbackMessage: 'El enlace expiró o ya fue usado',
+      );
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException(
+        message: 'El enlace expiró o ya fue usado',
+        originalException: e,
+      );
+    }
+  }
+
+  @override
   Future<void> logout() async {
     try {
-      final refreshToken = await _secureStorage.read(AppConstants.refreshTokenKey);
+      final refreshToken =
+          await _secureStorage.read(AppConstants.refreshTokenKey);
       await _httpClient.post(
         ApiEndpoints.logout,
         data: refreshToken == null
@@ -77,7 +145,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
               },
       );
     } on DioException catch (e) {
-      throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al cerrar sesion');
+      throw ApiResponseParser.toServerException(e,
+          fallbackMessage: 'Error al cerrar sesion');
     } catch (e) {
       throw ServerException(
         message: 'Error al cerrar sesion',
@@ -94,7 +163,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       final userJson = ApiResponseParser.asMap(data['user'] ?? data);
       return UserModel.fromJson(userJson);
     } on DioException catch (e) {
-      throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al obtener perfil');
+      throw ApiResponseParser.toServerException(e,
+          fallbackMessage: 'Error al obtener perfil');
     } catch (e) {
       throw ServerException(
         message: 'Error al obtener perfil',

@@ -7,7 +7,7 @@ class RoutePaths {
   static const String profile = '/profile';
 
   // Main routes
-  static const String home = '/';
+  static const String home = '/home';
   static const String dashboard = '/dashboard';
 
   // Galpones routes
@@ -54,8 +54,23 @@ class RoutePaths {
   // Trazabilidad routes
   static const String trazabilidad = '/trazabilidad';
 
+  // Auth recovery
+  static const String forgotPassword = '/forgot-password';
+  static const String resetPassword = '/reset-password/:token';
+  static String resetPasswordPath(String token) => '/reset-password/$token';
+
+  // Scanner route
+  static const String qrScanner = '/scanner';
+
+  // Galpon QR route
+  static const String galponQr = '/galpones/:id/qr';
+  static String galponQrPath(String id) => '/galpones/$id/qr';
+
   // Settings routes
   static const String settings = '/settings';
+
+  // Notifications route
+  static const String notifications = '/notifications';
 
   // Helper methods for dynamic routes
   static String galponDetailPath(String id) => '/galpones/$id';

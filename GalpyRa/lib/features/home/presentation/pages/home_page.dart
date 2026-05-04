@@ -1,41 +1,78 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../../../config/constants/app_constants.dart';
+import '../../../../config/di/injector.dart';
 import '../../../../config/routes/route_paths.dart';
 import '../../../../config/theme/colors.dart';
+import '../../../../core/storage/secure_storage.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../../galpones/presentation/controllers/galpones_controller.dart';
+import '../../../reportes/presentation/controllers/reportes_controller.dart';
 
 /// Pagina principal - Home
-class HomePage extends ConsumerWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends ConsumerState<HomePage> {
+  String _rol = 'PRODUCTOR';
+  bool _rolLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRol();
+  }
+
+  Future<void> _loadRol() async {
+    final rol = await getIt<SecureStorage>().read(AppConstants.userRoleKey) ??
+        'PRODUCTOR';
+    if (!mounted) return;
+    setState(() {
+      _rol = rol.trim().toUpperCase();
+      _rolLoaded = true;
+    });
+
+    if (_isAdmin) {
+      await _loadAdminDashboard();
+    }
+  }
+
+  Future<void> _loadAdminDashboard() async {
+    final connectivity = await Connectivity().checkConnectivity();
+    if (connectivity == ConnectivityResult.none) {
+      return;
+    }
+
+    await ref.read(reportesControllerProvider.notifier).cargarDatosDashboard();
+  }
+
+  bool get _isAdmin => _rol == 'ADMIN';
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
     final nombreUsuario = authState.user?.name ?? 'Usuario';
+    final dashboardState = ref.watch(reportesControllerProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: _buildHomeAppBar(context),
+      bottomNavigationBar: _isAdmin ? null : _buildBottomBar(context, ref),
       body: RefreshIndicator(
-        onRefresh: () async {
-          // TODO: Refresh dashboard data
-        },
+        onRefresh: _loadRol,
         child: LayoutBuilder(
           builder: (context, constraints) {
             final width = constraints.maxWidth;
             final bool isTablet = width > 720;
             final double horizontalPadding = isTablet ? 24 : 16;
-            final int crossAxisCount;
-
-            if (width < 480) {
-              crossAxisCount = 2;
-            } else if (width <= 720) {
-              crossAxisCount = 3;
-            } else {
-              crossAxisCount = 4;
-            }
 
             return SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -43,29 +80,116 @@ class HomePage extends ConsumerWidget {
                 horizontalPadding,
                 16,
                 horizontalPadding,
-                32,
+                16,
               ),
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 800),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildGreeting(context, nombreUsuario),
-                      const SizedBox(height: 18),
-                      _buildSectionTitle(context, 'Resumen del día'),
-                      const SizedBox(height: 10),
-                      _buildQuickStats(context),
-                      const SizedBox(height: 24),
-                      _buildSectionTitle(context, 'Módulos'),
-                      const SizedBox(height: 12),
-                      _buildMenuGrid(context, ref, crossAxisCount),
-                    ],
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 220),
+                    child: !_rolLoaded
+                        ? const Padding(
+                            key: ValueKey('home-loading'),
+                            padding: EdgeInsets.symmetric(vertical: 120),
+                            child: Center(child: CircularProgressIndicator()),
+                          )
+                        : Column(
+                            key: const ValueKey('home-content'),
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _isAdmin
+                                  ? _buildAdminHeader(context, dashboardState)
+                                  : _buildOperarioHeader(
+                                      context, nombreUsuario),
+                              const SizedBox(height: 18),
+                              _buildSectionTitle(
+                                context,
+                                _isAdmin
+                                    ? 'Panel administrativo'
+                                    : 'Panel operativo',
+                              ),
+                              const SizedBox(height: 12),
+                              _buildSectionTitle(context, 'Módulos'),
+                              const SizedBox(height: 12),
+                              _buildMenuGrid(context, ref, 3),
+                            ],
+                          ),
                   ),
                 ),
               ),
-            );
+            ).animate().fadeIn(duration: 200.ms).slideY(
+                begin: 0.04, end: 0, duration: 200.ms, curve: Curves.easeOut);
           },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomBar(BuildContext context, WidgetRef ref) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: const Border(top: BorderSide(color: AppColors.border, width: 1)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => _openModuleWithGalpon(
+                    context,
+                    ref,
+                    'Inventario Foto',
+                    RoutePaths.capturaPath,
+                  ),
+                  icon: const Icon(Icons.camera_alt, size: 20),
+                  label: const Text(
+                    'Conteo Foto',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.secondaryDark,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    elevation: 0,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => context.push(RoutePaths.qrScanner),
+                  icon: const Icon(Icons.qr_code_scanner, size: 20),
+                  label: const Text(
+                    'Escanear QR',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryDark,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    elevation: 0,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -75,9 +199,7 @@ class HomePage extends ConsumerWidget {
     return PreferredSize(
       preferredSize: const Size.fromHeight(84),
       child: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.primary,
-        ),
+        decoration: const BoxDecoration(color: AppColors.primary),
         child: SafeArea(
           bottom: false,
           child: AppBar(
@@ -111,7 +233,7 @@ class HomePage extends ConsumerWidget {
               IconButton(
                 icon: const Icon(Icons.notifications_outlined),
                 onPressed: () {
-                  // TODO: Navigate to notifications
+                  context.push(RoutePaths.notifications);
                 },
               ),
               IconButton(
@@ -143,9 +265,7 @@ class HomePage extends ConsumerWidget {
 
     if (galpones.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Primero crea o selecciona un galpón'),
-        ),
+        const SnackBar(content: Text('Primero crea o selecciona un galpón')),
       );
       context.push(RoutePaths.galpones);
       return;
@@ -202,17 +322,13 @@ class HomePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildGreeting(BuildContext context, String nombre) {
+  Widget _buildOperarioHeader(BuildContext context, String nombre) {
     final hora = DateTime.now().hour;
-    String saludo;
-    if (hora < 12) {
-      saludo = 'Buenos días';
-    } else if (hora < 18) {
-      saludo = 'Buenas tardes';
-    } else {
-      saludo = 'Buenas noches';
-    }
-
+    final saludo = hora < 12
+        ? 'Buenos días'
+        : hora < 18
+            ? 'Buenas tardes'
+            : 'Buenas noches';
     final hoy = DateTime.now();
 
     return Container(
@@ -241,22 +357,341 @@ class HomePage extends ConsumerWidget {
                 ),
           ),
           const SizedBox(height: 10),
+          Text(
+            'Hoy ${hoy.day}/${hoy.month}/${hoy.year}',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+          const SizedBox(height: 12),
+          _buildConectividadChip(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdminHeader(BuildContext context, ReportesState dashboardState) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Panel administrativo',
+                      style:
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primaryDark,
+                              ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Supervisión, control y gestión',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              _buildConectividadChip(),
+            ],
+          ),
+          const SizedBox(height: 16),
+          StreamBuilder<ConnectivityResult>(
+            stream: Connectivity().onConnectivityChanged,
+            builder: (context, snapshot) {
+              final isOnline =
+                  snapshot.hasData && snapshot.data != ConnectivityResult.none;
+
+              if (!isOnline) {
+                return _buildOfflineMetricsMessage(context);
+              }
+
+              final datos = dashboardState.datosDashboard;
+              if (dashboardState.isLoading && datos == null) {
+                return _buildMetricsLoading(context);
+              }
+
+              if (datos == null) {
+                return _buildMetricsUnavailable(
+                    context, dashboardState.errorMessage);
+              }
+
+              return _buildAdminMetricsGrid(context, datos);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdminMetricsGrid(
+      BuildContext context, Map<String, dynamic> datos) {
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      mainAxisSpacing: 12,
+      crossAxisSpacing: 12,
+      mainAxisExtent: 130,
+      children: [
+        _buildMetricCard(
+          context,
+          icon: Icons.egg_alt_outlined,
+          color: const Color(0xFFD4920A),
+          label: 'Total aves',
+          value:
+              _metricValue(datos, const ['aves_activas', 'total_aves_activas']),
+          emoji: '🐔',
+        ),
+        _buildMetricCard(
+          context,
+          icon: Icons.egg_outlined,
+          color: const Color(0xFFE67E22),
+          label: 'Prod. hoy',
+          value: _metricValue(
+              datos, const ['produccion_hoy', 'produccion_ultimos_7_dias']),
+        ),
+        _buildMetricCard(
+          context,
+          icon: Icons.warning_amber_outlined,
+          color: const Color(0xFFC0392B),
+          label: 'Mort. mes',
+          value: _metricValue(datos, const [
+            'mortalidad_mes',
+            'tasa_mortalidad_mes',
+            'tasa_mortalidad_porcentaje'
+          ]),
+        ),
+        _buildMetricCard(
+          context,
+          icon: Icons.home_work_outlined,
+          color: const Color(0xFF2C3E7A),
+          label: 'Galpones',
+          value:
+              _metricValue(datos, const ['galpones_activos', 'total_galpones']),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMetricCard(
+    BuildContext context, {
+    required IconData icon,
+    required Color color,
+    required String label,
+    required String value,
+    String? emoji,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.09),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.surfaceVariant,
-              borderRadius: BorderRadius.circular(999),
+              color: color.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Text(
-              'Hoy ${hoy.day}/${hoy.month}/${hoy.year}',
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+            child: emoji != null
+                ? Text(emoji, style: const TextStyle(fontSize: 20))
+                : Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: color,
+              height: 1.1,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildMetricsLoading(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            'Cargando métricas...',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOfflineMetricsMessage(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Text(
+        'Sin conexión — métricas no disponibles',
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Colors.grey.shade700,
+              fontWeight: FontWeight.w600,
+            ),
+      ),
+    );
+  }
+
+  Widget _buildMetricsUnavailable(BuildContext context, String? errorMessage) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Métricas no disponibles',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          if (errorMessage != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              errorMessage,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+            ),
+          ],
+          const SizedBox(height: 10),
+          TextButton(
+            onPressed: _loadAdminDashboard,
+            child: const Text('Reintentar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildConectividadChip() {
+    return StreamBuilder<ConnectivityResult>(
+      stream: Connectivity().onConnectivityChanged,
+      builder: (context, snapshot) {
+        final isOnline =
+            snapshot.hasData && snapshot.data != ConnectivityResult.none;
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: isOnline
+                ? const Color(0xFF27AE60).withValues(alpha: 0.12)
+                : Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isOnline ? const Color(0xFF27AE60) : Colors.grey,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                isOnline ? 'En línea' : 'Sin conexión',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color:
+                      isOnline ? const Color(0xFF27AE60) : Colors.grey.shade600,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  String _metricValue(Map<String, dynamic> datos, List<String> keys) {
+    for (final key in keys) {
+      final value = datos[key];
+      if (value == null) continue;
+
+      if (value is num) {
+        if (value == value.roundToDouble()) {
+          return value.toInt().toString();
+        }
+        return value.toStringAsFixed(1);
+      }
+
+      final text = value.toString().trim();
+      if (text.isNotEmpty) {
+        return text;
+      }
+    }
+
+    return '—';
   }
 
   Widget _buildSectionTitle(BuildContext context, String text) {
@@ -269,169 +704,79 @@ class HomePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildQuickStats(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildStatCard(
-            'Aves Activas',
-            '—',
-            Icons.spa_outlined,
-            AppColors.primary,
-          ),
+  List<_MenuItem> _buildMenuItems(BuildContext context, WidgetRef ref) {
+    if (_isAdmin) {
+      return [
+        _MenuItem(
+          'Reportes',
+          Icons.assessment_outlined,
+          const Color(0xFF2C3E7A),
+          () => context.push(RoutePaths.reportes),
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildStatCard(
-            'Producción Hoy',
-            '—',
-            Icons.egg_outlined,
-            AppColors.secondaryDark,
-          ),
+        _MenuItem(
+          'Admin',
+          Icons.admin_panel_settings_outlined,
+          const Color(0xFF5D6D8A),
+          () => context.push(RoutePaths.adminDashboard),
         ),
-      ],
-    );
-  }
+        _MenuItem(
+          'Galpones',
+          Icons.home_work_outlined,
+          const Color(0xFFD4920A),
+          () => context.push(RoutePaths.galpones),
+        ),
+      ];
+    }
 
-  Widget _buildStatCard(
-    String titulo,
-    String valor,
-    IconData icon,
-    Color color,
-  ) {
-    return Container(
-      constraints: const BoxConstraints(minHeight: 100),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.2)),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 22),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            valor,
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            titulo,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey[600],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMenuGrid(
-      BuildContext context, WidgetRef ref, int crossAxisCount) {
-    final menuItems = [
+    return [
       _MenuItem(
         'Galpones',
         Icons.home_work_outlined,
-        AppColors.primaryDark,
+        const Color(0xFFD4920A),
         () => context.push(RoutePaths.galpones),
-      ),
-      _MenuItem(
-        'Aves',
-        Icons.spa_outlined,
-        AppColors.accentLime,
-        () => _openModuleWithGalpon(
-          context,
-          ref,
-          'Aves',
-          RoutePaths.avesPath,
-        ),
       ),
       _MenuItem(
         'Producción',
         Icons.egg_outlined,
-        AppColors.secondaryDark,
+        const Color(0xFFE67E22),
         () => _openModuleWithGalpon(
-          context,
-          ref,
-          'Producción',
-          RoutePaths.produccionPath,
-        ),
-      ),
-      _MenuItem(
-        'Sanidad',
-        Icons.medical_services_outlined,
-        AppColors.error,
-        () => _openModuleWithGalpon(
-          context,
-          ref,
-          'Sanidad',
-          RoutePaths.sanidadPath,
-        ),
+            context, ref, 'Producción', RoutePaths.produccionPath),
       ),
       _MenuItem(
         'Alimentación',
         Icons.restaurant_outlined,
-        AppColors.primary,
+        const Color(0xFF8B9B2A),
         () => _openModuleWithGalpon(
-          context,
-          ref,
-          'Alimentación',
-          RoutePaths.alimentacionPath,
-        ),
+            context, ref, 'Alimentación', RoutePaths.alimentacionPath),
+      ),
+      _MenuItem(
+        'Sanidad',
+        Icons.medical_services_outlined,
+        const Color(0xFFC0392B),
+        () => _openModuleWithGalpon(
+            context, ref, 'Sanidad', RoutePaths.sanidadPath),
+      ),
+      _MenuItem(
+        'Aves',
+        Icons.spa_outlined,
+        const Color(0xFF27AE60),
+        () => _openModuleWithGalpon(context, ref, 'Aves', RoutePaths.avesPath),
       ),
       _MenuItem(
         'Inventario Foto',
         Icons.camera_alt_outlined,
-        AppColors.accentYellow,
+        const Color(0xFFD4920A),
         () => context.push(RoutePaths.inventarioFoto),
       ),
-      _MenuItem(
-        'Reportes',
-        Icons.assessment_outlined,
-        AppColors.secondaryDark,
-        () => context.push(RoutePaths.reportes),
-      ),
-      _MenuItem(
-        'Dashboard',
-        Icons.dashboard_outlined,
-        AppColors.primaryLight,
-        () => context.push(RoutePaths.dashboard),
-      ),
-      _MenuItem(
-        'Trazabilidad',
-        Icons.qr_code_scanner_outlined,
-        AppColors.primaryDark,
-        () => context.push(RoutePaths.trazabilidad),
-      ),
-      _MenuItem(
-        'Admin',
-        Icons.admin_panel_settings_outlined,
-        AppColors.warning,
-        () => context.push(RoutePaths.adminDashboard),
-      ),
     ];
+  }
+
+  Widget _buildMenuGrid(
+    BuildContext context,
+    WidgetRef ref,
+    int crossAxisCount,
+  ) {
+    final menuItems = _buildMenuItems(context, ref);
 
     return GridView.builder(
       shrinkWrap: true,
@@ -440,56 +785,60 @@ class HomePage extends ConsumerWidget {
         crossAxisCount: crossAxisCount,
         mainAxisSpacing: 16,
         crossAxisSpacing: 16,
-        childAspectRatio: 0.95,
+        mainAxisExtent: 110,
       ),
       itemCount: menuItems.length,
-      itemBuilder: (context, index) {
-        final item = menuItems[index];
-        return _buildMenuItem(item);
-      },
+      itemBuilder: (context, index) => _buildMenuItem(menuItems[index]),
     );
   }
 
   Widget _buildMenuItem(_MenuItem item) {
     return InkWell(
       onTap: item.onTap,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
-          color: item.color.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(18),
+          color: const Color(0xFFFDF3DC),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: item.color.withOpacity(0.25),
+            color: const Color(0xFFE8D5A3),
             width: 1.5,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: item.color.withOpacity(0.15),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Stack(
           children: [
-            Icon(
-              item.icon,
-              color: item.color,
-              size: 36,
-            ),
-            const SizedBox(height: 10),
-            Text(
-              item.label,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+            Positioned(
+              top: 2,
+              right: 2,
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: item.color,
+                  shape: BoxShape.circle,
+                ),
               ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+            ),
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(item.icon, color: item.color, size: 34),
+                  const SizedBox(height: 8),
+                  Text(
+                    item.label,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
           ],
         ),

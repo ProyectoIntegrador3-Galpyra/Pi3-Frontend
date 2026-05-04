@@ -8,6 +8,15 @@ enum UserRole {
 
   static UserRole fromString(String value) {
     final normalized = value.trim().toLowerCase();
+
+    if (normalized == 'productor' || normalized == 'operario') {
+      return UserRole.operator;
+    }
+
+    if (normalized == 'tecnico') {
+      return UserRole.supervisor;
+    }
+
     return UserRole.values.firstWhere(
       (role) => role.name == normalized,
       orElse: () => UserRole.viewer,
@@ -25,7 +34,7 @@ extension UserRoleExtension on UserRole {
       case UserRole.supervisor:
         return 'Supervisor';
       case UserRole.operator:
-        return 'Operador';
+        return 'Operario';
       case UserRole.viewer:
         return 'Observador';
     }

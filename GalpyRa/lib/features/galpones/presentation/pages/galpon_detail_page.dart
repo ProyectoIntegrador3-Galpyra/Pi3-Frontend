@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../config/constants/app_constants.dart';
+import '../../../../config/di/injector.dart';
 import '../../../../config/routes/route_paths.dart';
 import '../../../../config/theme/colors.dart';
+import '../../../../core/storage/secure_storage.dart';
 import '../../../../core/widgets/app_scaffold.dart';
-import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/loading.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/utils/formatters.dart';
@@ -24,15 +26,19 @@ class GalponDetailPage extends ConsumerStatefulWidget {
 }
 
 class _GalponDetailPageState extends ConsumerState<GalponDetailPage> {
+  String _rol = 'PRODUCTOR';
+
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      ref
-          .read(galponesControllerProvider.notifier)
-          .obtenerGalpon(widget.galponId);
+    Future.microtask(() async {
+      ref.read(galponesControllerProvider.notifier).obtenerGalpon(widget.galponId);
+      final rol = await getIt<SecureStorage>().read(AppConstants.userRoleKey) ?? 'PRODUCTOR';
+      if (mounted) setState(() => _rol = rol.trim().toUpperCase());
     });
   }
+
+  bool get _isAdmin => _rol == 'ADMIN';
 
   @override
   Widget build(BuildContext context) {
@@ -40,14 +46,6 @@ class _GalponDetailPageState extends ConsumerState<GalponDetailPage> {
 
     return AppScaffold(
       title: 'Detalle de Galpón',
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.edit),
-          onPressed: () {
-            context.push(RoutePaths.galponEditPath(widget.galponId));
-          },
-        ),
-      ],
       body: _buildBody(state),
     );
   }
@@ -153,6 +151,57 @@ class _GalponDetailPageState extends ConsumerState<GalponDetailPage> {
           ),
           const SizedBox(height: 16),
 
+          FutureBuilder<Map<String, dynamic>?>(
+            future: ref
+                .read(galponesControllerProvider.notifier)
+                .getTurnoActivo(widget.galponId),
+            builder: (context, snapshot) {
+              final turno = snapshot.data;
+              if (turno == null) {
+                return const SizedBox.shrink();
+              }
+
+              return Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFDF3DC),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE8D5A3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.person_outline,
+                        color: Color(0xFFD4920A), size: 20),
+                    const SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Turno ${(turno['nombre'] ?? 'Sin turno').toString()}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                        Text(
+                          (turno['operario_nombre'] ??
+                                  turno['operarioNombre'] ??
+                                  'Sin operario asignado')
+                              .toString(),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 16),
+
           // Occupancy card
           Card(
             child: Padding(
@@ -168,23 +217,25 @@ class _GalponDetailPageState extends ConsumerState<GalponDetailPage> {
                   ),
                   const SizedBox(height: 16),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildStatItem(
+                      Expanded(
+                          child: _buildStatItem(
                         'Actual',
                         Formatters.formatNumber(galpon.cantidadActual),
                         'aves',
-                      ),
-                      _buildStatItem(
+                      )),
+                      Expanded(
+                          child: _buildStatItem(
                         'Capacidad',
                         Formatters.formatNumber(galpon.capacidadMaxima),
                         'aves',
-                      ),
-                      _buildStatItem(
+                      )),
+                      Expanded(
+                          child: _buildStatItem(
                         'Ocupación',
                         Formatters.formatPercentage(galpon.porcentajeOcupacion),
                         '',
-                      ),
+                      )),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -203,68 +254,142 @@ class _GalponDetailPageState extends ConsumerState<GalponDetailPage> {
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
-          // Quick actions
-          Text(
-            'Acciones rápidas',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+          // QR del galpón
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.qr_code_2,
+                  color: AppColors.primaryDark, size: 32),
+              title: const Text('Código QR del Galpón',
+                  style: TextStyle(fontWeight: FontWeight.w600)),
+              subtitle: const Text('Ver, compartir e imprimir el QR'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push(
+                RoutePaths.galponQrPath(galpon.id),
+                extra: {
+                  'nombre': galpon.nombre,
+                  'ubicacion': galpon.ubicacion,
+                },
+              ),
+            ),
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: AppButton(
-                  text: 'Inventario',
-                  icon: Icons.camera_alt_outlined,
-                  onPressed: () {
-                    context.push(RoutePaths.capturaPath(galpon.id));
-                  },
-                  type: AppButtonType.outline,
-                ),
+          const SizedBox(height: 24),
+          if (_isAdmin)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceVariant,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: AppButton(
-                  text: 'Producción',
-                  icon: Icons.egg_outlined,
-                  onPressed: () {
-                    context.push(RoutePaths.produccionFormPath(galpon.id));
-                  },
-                  type: AppButtonType.outline,
-                ),
+              child: Text(
+                'Vista de solo lectura — panel de seguimiento del galpón.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: AppButton(
-                  text: 'Sanidad',
-                  icon: Icons.medical_services_outlined,
-                  onPressed: () {
-                    context.push(RoutePaths.sanidadFormPath(galpon.id));
-                  },
-                  type: AppButtonType.outline,
+            )
+          else ...[
+            Text(
+              'Acciones rápidas',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _actionButton(
+                    icon: Icons.spa_outlined,
+                    label: 'Aves',
+                    color: AppColors.accentLime,
+                    onTap: () => context.push(RoutePaths.avesPath(galpon.id)),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: AppButton(
-                  text: 'Alimentación',
-                  icon: Icons.restaurant_outlined,
-                  onPressed: () {
-                    context.push(RoutePaths.alimentacionFormPath(galpon.id));
-                  },
-                  type: AppButtonType.outline,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _actionButton(
+                    icon: Icons.egg_outlined,
+                    label: 'Producción',
+                    color: AppColors.secondaryDark,
+                    onTap: () => context.push(RoutePaths.produccionPath(galpon.id)),
+                  ),
                 ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _actionButton(
+                    icon: Icons.medical_services_outlined,
+                    label: 'Sanidad',
+                    color: AppColors.error,
+                    onTap: () => context.push(RoutePaths.sanidadPath(galpon.id)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _actionButton(
+                    icon: Icons.restaurant_outlined,
+                    label: 'Alimentación',
+                    color: AppColors.primary,
+                    onTap: () => context.push(RoutePaths.alimentacionPath(galpon.id)),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: _actionButton(
+                icon: Icons.camera_alt_outlined,
+                label: 'Inventario por Foto',
+                color: AppColors.primaryDark,
+                onTap: () => context.push(RoutePaths.capturaPath(galpon.id)),
               ),
-            ],
-          ),
+            ),
+          ],
         ],
+      ),
+    );
+  }
+
+  Widget _actionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withOpacity(0.25)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

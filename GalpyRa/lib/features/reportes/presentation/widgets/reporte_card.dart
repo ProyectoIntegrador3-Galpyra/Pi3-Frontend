@@ -7,11 +7,13 @@ import '../../../../config/theme/colors.dart';
 class ReporteCard extends StatelessWidget {
   final Reporte reporte;
   final VoidCallback? onTap;
+  final VoidCallback? onPdfTap;
 
   const ReporteCard({
     super.key,
     required this.reporte,
     this.onTap,
+    this.onPdfTap,
   });
 
   @override
@@ -88,18 +90,24 @@ class ReporteCard extends StatelessWidget {
                   ),
                   if (reporte.formato != null) ...[
                     const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        reporte.formato!.name.toUpperCase(),
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
+                    InkWell(
+                      onTap: reporte.formato == FormatoExportacion.pdf
+                          ? onPdfTap
+                          : null,
+                      borderRadius: BorderRadius.circular(4),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          reporte.formato!.name.toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),

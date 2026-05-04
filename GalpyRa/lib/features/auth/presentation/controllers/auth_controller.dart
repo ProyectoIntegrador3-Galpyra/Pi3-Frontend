@@ -1,8 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../config/di/injector.dart';
+import '../../../../config/constants/app_constants.dart';
+import '../../../../core/errors/failure.dart';
 import '../../../../core/errors/failure_message_mapper.dart';
+import '../../../../core/storage/secure_storage.dart';
 import '../../domain/entities/user.dart';
+import '../../domain/usecases/forgot_password.dart';
 import '../../domain/usecases/login.dart';
+import '../../domain/usecases/reset_password.dart';
 import '../../domain/usecases/logout.dart';
 import '../../domain/usecases/get_profile.dart';
 
@@ -40,14 +45,20 @@ class AuthController extends StateNotifier<AuthState> {
   final LoginUseCase _loginUseCase;
   final LogoutUseCase _logoutUseCase;
   final GetProfileUseCase _getProfileUseCase;
+  final ForgotPasswordUseCase _forgotPasswordUseCase;
+  final ResetPasswordUseCase _resetPasswordUseCase;
 
   AuthController({
     required LoginUseCase loginUseCase,
     required LogoutUseCase logoutUseCase,
     required GetProfileUseCase getProfileUseCase,
+    required ForgotPasswordUseCase forgotPasswordUseCase,
+    required ResetPasswordUseCase resetPasswordUseCase,
   })  : _loginUseCase = loginUseCase,
         _logoutUseCase = logoutUseCase,
         _getProfileUseCase = getProfileUseCase,
+        _forgotPasswordUseCase = forgotPasswordUseCase,
+        _resetPasswordUseCase = resetPasswordUseCase,
         super(const AuthState());
 
   /// Login with email and password
@@ -113,6 +124,61 @@ class AuthController extends StateNotifier<AuthState> {
   void clearError() {
     state = state.copyWith(error: null);
   }
+
+  /// Send password recovery email
+  Future<bool> requestPasswordReset(String email) async {
+    if (state.isLoading) return false;
+
+    state = state.copyWith(isLoading: true, error: null);
+
+    final result = await _forgotPasswordUseCase(email: email);
+
+    return result.fold(
+      (failure) {
+        state = state.copyWith(
+          isLoading: false,
+          error: mapFailureMessage(failure),
+        );
+        return false;
+      },
+      (_) {
+        state = state.copyWith(isLoading: false, error: null);
+        return true;
+      },
+    );
+  }
+
+  /// Reset password using the token from the deep link
+  Future<void> resetPassword({
+    required String token,
+    required String nuevaPassword,
+  }) async {
+    final result = await _resetPasswordUseCase(
+      token: token,
+      nuevaPassword: nuevaPassword,
+    );
+
+    result.fold(
+      (failure) {
+        throw Exception(_resetPasswordMessage(failure));
+      },
+      (_) {},
+    );
+  }
+
+  String _resetPasswordMessage(Failure failure) {
+    if (failure is ServerFailure &&
+        (failure.statusCode == 400 || failure.statusCode == 410)) {
+      return 'El enlace expiró o ya fue usado. Solicita uno nuevo desde la app.';
+    }
+
+    final message = mapFailureMessage(failure).trim();
+    if (message.isNotEmpty) {
+      return message;
+    }
+
+    return 'El enlace expiró o ya fue usado. Solicita uno nuevo desde la app.';
+  }
 }
 
 /// Auth controller provider
@@ -122,5 +188,11 @@ final authControllerProvider =
     loginUseCase: getIt<LoginUseCase>(),
     logoutUseCase: getIt<LogoutUseCase>(),
     getProfileUseCase: getIt<GetProfileUseCase>(),
+    forgotPasswordUseCase: getIt<ForgotPasswordUseCase>(),
+    resetPasswordUseCase: getIt<ResetPasswordUseCase>(),
   );
+});
+
+final userRoleProvider = FutureProvider<String?>((ref) async {
+  return getIt<SecureStorage>().read(AppConstants.userRoleKey);
 });

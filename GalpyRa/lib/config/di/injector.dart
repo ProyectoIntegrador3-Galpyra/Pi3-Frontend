@@ -17,6 +17,8 @@ import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/domain/usecases/login.dart';
 import '../../features/auth/domain/usecases/logout.dart';
 import '../../features/auth/domain/usecases/get_profile.dart';
+import '../../features/auth/domain/usecases/forgot_password.dart';
+import '../../features/auth/domain/usecases/reset_password.dart';
 
 // Galpones
 import '../../features/galpones/data/datasources/galpon_remote_ds.dart';
@@ -125,6 +127,8 @@ Future<void> setupInjector() async {
   getIt.registerLazySingleton(() => LoginUseCase(getIt()));
   getIt.registerLazySingleton(() => LogoutUseCase(getIt()));
   getIt.registerLazySingleton(() => GetProfileUseCase(getIt()));
+  getIt.registerLazySingleton(() => ForgotPasswordUseCase(getIt()));
+  getIt.registerLazySingleton(() => ResetPasswordUseCase(getIt()));
 
   // ========== GALPONES ==========
   // Datasources

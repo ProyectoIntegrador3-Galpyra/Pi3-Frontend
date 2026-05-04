@@ -193,6 +193,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         isLoading: authState.isLoading,
                         isExpanded: true,
                       ),
+                      TextButton(
+                        onPressed: () => context.go(RoutePaths.forgotPassword),
+                        child: const Text(
+                          '¿Olvidaste tu contraseña?',
+                          style: TextStyle(
+                            color: Color(0xFFD4920A),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),

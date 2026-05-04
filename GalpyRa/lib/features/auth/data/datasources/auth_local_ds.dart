@@ -10,6 +10,7 @@ abstract class AuthLocalDataSource {
   Future<void> cacheToken(String token);
   Future<void> cacheRefreshToken(String token);
   Future<void> cacheUser(UserModel user);
+  Future<void> cacheUserRole(String role);
   Future<String?> getToken();
   Future<String?> getRefreshToken();
   Future<UserModel?> getCachedUser();
@@ -60,6 +61,18 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   }
 
   @override
+  Future<void> cacheUserRole(String role) async {
+    try {
+      await _secureStorage.write(AppConstants.userRoleKey, role);
+    } catch (e) {
+      throw CacheException(
+        message: 'Error al guardar rol de usuario',
+        originalException: e,
+      );
+    }
+  }
+
+  @override
   Future<String?> getToken() async {
     try {
       return await _secureStorage.read(AppConstants.tokenKey);
@@ -94,8 +107,11 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   @override
   Future<void> clearAuthData() async {
     try {
-      await _secureStorage.delete(AppConstants.tokenKey);
-      await _secureStorage.delete(AppConstants.refreshTokenKey);
+      await _secureStorage.deleteMany([
+        AppConstants.tokenKey,
+        AppConstants.refreshTokenKey,
+        AppConstants.userRoleKey,
+      ]);
       await LocalDb.removeSetting(AppConstants.userKey);
     } catch (e) {
       throw CacheException(

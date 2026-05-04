@@ -20,9 +20,9 @@ class AppColors {
   static const Color accentLime = Color(0xFFFFC933);
 
   // Neutral colors
-  static const Color background = Color(0xFFFFFBEE);
-  static const Color surface = Color(0xFFFFFFFF);
-  static const Color surfaceVariant = Color(0xFFFFF5CC);
+  static const Color background = Color(0xFFFFF8E7);
+  static const Color surface = Color(0xFFFFFDF6);
+  static const Color surfaceVariant = Color(0xFFFDF3DC);
 
   // Text colors
   static const Color textPrimary = Color(0xFF1F2933);
@@ -32,7 +32,7 @@ class AppColors {
   static const Color textOnSecondary = Color(0xFF1F2933);
 
   // Status colors
-  static const Color success = Color(0xFFE0A800);
+  static const Color success = Color(0xFF27AE60);
   static const Color warning = Color(0xFFE08A00);
   static const Color error = Color(0xFFC62828);
   static const Color info = Color(0xFF1E88E5);
@@ -52,7 +52,7 @@ class AppColors {
   static const Color darkSurfaceVariant = Color(0xFF2C2C2C);
 
   // Border colors
-  static const Color border = Color(0xFFE8D99A);
+  static const Color border = Color(0xFFE8D5A3);
   static const Color borderDark = Color(0xFF424242);
 
   // Shadow colors

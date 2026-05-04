@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
+import '../../../../config/theme/colors.dart';
 import '../../../../core/widgets/app_scaffold.dart';
 import '../controllers/trazabilidad_controller.dart';
 
@@ -77,11 +80,8 @@ class _TrazabilidadPageState extends ConsumerState<TrazabilidadPage> {
               ),
             ),
             if (state.generatedToken != null) ...[
-              const SizedBox(height: 8),
-              SelectableText(
-                'Token generado: ${state.generatedToken}',
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
+              const SizedBox(height: 16),
+              _QrTokenCard(token: state.generatedToken!),
             ],
             const SizedBox(height: 24),
             const Text(
@@ -119,6 +119,66 @@ class _TrazabilidadPageState extends ConsumerState<TrazabilidadPage> {
               const SizedBox(height: 16),
               _ResultadoTrazabilidad(data: state.consultaData!),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _QrTokenCard extends StatelessWidget {
+  final String token;
+
+  const _QrTokenCard({required this.token});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            const Text(
+              'QR generado — escanea para consultar',
+              style: TextStyle(fontWeight: FontWeight.w600),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Center(
+              child: QrImageView(
+                data: token,
+                version: QrVersions.auto,
+                size: 200,
+                backgroundColor: Colors.white,
+                eyeStyle: const QrEyeStyle(
+                  eyeShape: QrEyeShape.square,
+                  color: AppColors.primaryDark,
+                ),
+                dataModuleStyle: const QrDataModuleStyle(
+                  dataModuleShape: QrDataModuleShape.square,
+                  color: AppColors.primaryDark,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            GestureDetector(
+              onTap: () {
+                Clipboard.setData(ClipboardData(text: token));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Token copiado')),
+                );
+              },
+              child: Text(
+                token,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: AppColors.textSecondary,
+                  decoration: TextDecoration.underline,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
           ],
         ),
       ),

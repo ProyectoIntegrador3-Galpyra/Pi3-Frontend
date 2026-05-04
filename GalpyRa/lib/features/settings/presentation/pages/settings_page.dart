@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../config/routes/route_paths.dart';
 import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../core/widgets/loading.dart';
+import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../controllers/settings_controller.dart';
 
 /// Página de configuraciones
@@ -406,8 +407,8 @@ class SettingsPage extends ConsumerWidget {
     );
 
     if (confirmed == true && context.mounted) {
-      // TODO: Implement logout
-      context.go(RoutePaths.login);
+      await ref.read(authControllerProvider.notifier).logout();
+      if (context.mounted) context.go(RoutePaths.login);
     }
   }
 

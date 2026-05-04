@@ -12,15 +12,13 @@ import '../controllers/admin_controller.dart';
 /// Roles disponibles en el backend: (valor_backend, etiqueta_display)
 const _kRoles = [
   ('ADMIN', 'Administrador'),
-  ('PRODUCTOR', 'Productor'),
-  ('TECNICO', 'Técnico'),
+  ('PRODUCTOR', 'Operario'),
 ];
 
 /// Convierte el UserRole del dominio al valor string del backend.
 String _roleDomainToBackend(dynamic role) {
   final name = role?.toString().split('.').last.toLowerCase() ?? '';
   if (name == 'admin') return 'ADMIN';
-  if (name == 'tecnico') return 'TECNICO';
   return 'PRODUCTOR';
 }
 

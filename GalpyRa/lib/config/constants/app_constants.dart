@@ -30,6 +30,7 @@ class AppConstants {
   static const String tokenKey = 'auth_token';
   static const String refreshTokenKey = 'refresh_token';
   static const String userKey = 'user_data';
+  static const String userRoleKey = 'user_role';
   static const String themeKey = 'theme_mode';
   static const String localeKey = 'locale';
   static const String onboardingKey = 'onboarding_completed';

@@ -157,7 +157,7 @@ class InventarioFotoController extends StateNotifier<InventarioFotoState> {
       return false;
     }
 
-    state = state.copyWith(isLoading: true);
+    state = state.copyWith(isLoading: true, errorMessage: null);
 
     final result = await _confirmarInventario(
       galponId: state.selectedGalponId!,
@@ -174,14 +174,9 @@ class InventarioFotoController extends StateNotifier<InventarioFotoState> {
         return false;
       },
       (_) {
-        // Actualizar conteo actual con cantidad final
-        final conteoFinalizado = state.conteoActual!.copyWith(
-          conteoFinal: cantidadFinal,
-        );
         state = state.copyWith(
           isLoading: false,
-          conteoActual: conteoFinalizado,
-          historial: [conteoFinalizado, ...state.historial],
+          errorMessage: null,
         );
         return true;
       },
@@ -213,6 +208,7 @@ class InventarioFotoController extends StateNotifier<InventarioFotoState> {
       imagePath: null,
       imageBytes: null,
       imageFilename: null,
+      errorMessage: null,
     );
   }
 

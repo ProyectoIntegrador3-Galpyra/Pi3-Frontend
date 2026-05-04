@@ -7,6 +7,7 @@ class ApiEndpoints {
   static const String logout = '/api/auth/logout';
   static const String profile = '/api/auth/me';
   static const String refreshToken = '/api/auth/refresh';
+  static const String resetPassword = '/api/auth/reset-password';
 
   // Dashboard endpoint
   static const String dashboard = '/api/dashboard';

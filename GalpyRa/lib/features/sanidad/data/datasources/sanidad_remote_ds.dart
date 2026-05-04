@@ -140,17 +140,17 @@ class SanidadRemoteDataSourceImpl implements SanidadRemoteDataSource {
         data: {
           'lote_id': loteId,
           'galpon_id': galponId,
-          // Backend field is 'tipo_evento' with UPPERCASE enum values.
           'tipo_evento': _tipoToBackend(tipo),
           'descripcion': descripcion,
-          // Backend requires 'producto' (maps to frontend's medicamento).
-          'producto': medicamento ?? '',
-          // Backend requires 'dosis'.
-          'dosis': dosis ?? '',
-          // Backend requires 'responsable' (maps to frontend's veterinario).
-          'responsable': veterinario ?? '',
           'fecha': fecha.toIso8601String().split('T').first,
-          if (observaciones != null && observaciones.isNotEmpty) 'observaciones': observaciones,
+          if (medicamento != null && medicamento.trim().isNotEmpty)
+            'producto': medicamento.trim(),
+          if (dosis != null && dosis.trim().isNotEmpty)
+            'dosis': dosis.trim(),
+          if (veterinario != null && veterinario.trim().isNotEmpty)
+            'responsable': veterinario.trim(),
+          if (observaciones != null && observaciones.trim().isNotEmpty)
+            'observaciones': observaciones.trim(),
         },
       );
 

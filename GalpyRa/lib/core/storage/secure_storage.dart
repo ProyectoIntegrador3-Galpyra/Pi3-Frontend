@@ -39,6 +39,12 @@ class SecureStorage {
     await _storage.deleteAll();
   }
 
+  Future<void> deleteMany(Iterable<String> keys) async {
+    for (final key in keys) {
+      await _storage.delete(key: key);
+    }
+  }
+
   /// Check if a key exists
   Future<bool> containsKey(String key) async {
     return await _storage.containsKey(key: key);

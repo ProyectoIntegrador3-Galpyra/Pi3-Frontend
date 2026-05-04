@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../config/routes/route_paths.dart';
 import '../../../../config/theme/colors.dart';
 import '../../../../core/widgets/app_scaffold.dart';
@@ -40,9 +41,10 @@ class _ReportesPageState extends ConsumerState<ReportesPage> {
       actions: [
         IconButton(
           icon: const Icon(Icons.refresh),
-          onPressed: () => ref.read(reportesControllerProvider.notifier).cargarHistorial(
-                tipo: _filtroTipo,
-              ),
+          onPressed: () =>
+              ref.read(reportesControllerProvider.notifier).cargarHistorial(
+                    tipo: _filtroTipo,
+                  ),
           tooltip: 'Actualizar',
         ),
         IconButton(
@@ -137,9 +139,10 @@ class _ReportesPageState extends ConsumerState<ReportesPage> {
     if (state.errorMessage != null && state.reportes.isEmpty) {
       return ErrorView(
         message: state.errorMessage!,
-        onRetry: () => ref.read(reportesControllerProvider.notifier).cargarHistorial(
-              tipo: _filtroTipo,
-            ),
+        onRetry: () =>
+            ref.read(reportesControllerProvider.notifier).cargarHistorial(
+                  tipo: _filtroTipo,
+                ),
       );
     }
 
@@ -151,9 +154,10 @@ class _ReportesPageState extends ConsumerState<ReportesPage> {
     }
 
     return RefreshIndicator(
-      onRefresh: () => ref.read(reportesControllerProvider.notifier).cargarHistorial(
-            tipo: _filtroTipo,
-          ),
+      onRefresh: () =>
+          ref.read(reportesControllerProvider.notifier).cargarHistorial(
+                tipo: _filtroTipo,
+              ),
       child: ListView.builder(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
         itemCount: state.reportes.length,
@@ -161,10 +165,197 @@ class _ReportesPageState extends ConsumerState<ReportesPage> {
           final reporte = state.reportes[index];
           return ReporteCard(
             reporte: reporte,
-            onTap: () => context.push(RoutePaths.reporteDetailPath(reporte.id)),
+            onTap: () => _mostrarAccionesReporte(reporte),
+            onPdfTap: () => _abrirReporte(reporte),
           );
         },
       ),
+    );
+  }
+
+  Future<void> _mostrarAccionesReporte(Reporte reporte) async {
+    if (!mounted) return;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  reporte.titulo,
+                  style: Theme.of(sheetContext).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  _getTipoLabel(reporte.tipo),
+                  style: Theme.of(sheetContext).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                ),
+                const SizedBox(height: 16),
+                _buildActionTile(
+                  icon: Icons.visibility_outlined,
+                  label: 'Ver reporte',
+                  onTap: () {
+                    Navigator.of(sheetContext).pop();
+                    _abrirReporte(reporte);
+                  },
+                ),
+                _buildActionTile(
+                  icon: Icons.download_outlined,
+                  label: 'Descargar PDF',
+                  onTap: () {
+                    Navigator.of(sheetContext).pop();
+                    _abrirReporte(reporte);
+                  },
+                ),
+                _buildActionTile(
+                  icon: Icons.open_in_new_outlined,
+                  label: 'Abrir en navegador',
+                  onTap: () {
+                    Navigator.of(sheetContext).pop();
+                    _abrirReporte(reporte);
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildActionTile({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: ListTile(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        tileColor: AppColors.surface,
+        leading: Icon(icon, color: AppColors.primaryDark),
+        title: Text(label),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: onTap,
+      ),
+    );
+  }
+
+  Future<void> _abrirReporte(Reporte reporte) async {
+    final String? url = reporte.archivoUrl;
+
+    if (url != null && url.isNotEmpty) {
+      try {
+        final uri = Uri.parse(url);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          return;
+        }
+      } catch (_) {}
+    }
+
+    if (!context.mounted) return;
+    _mostrarDatosReporte(reporte);
+  }
+
+  void _mostrarDatosReporte(Reporte reporte) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        final datos = reporte.datos;
+        final resumen = reporte.resumen;
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.6,
+          maxChildSize: 0.9,
+          builder: (_, controller) => ListView(
+            controller: controller,
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+            children: [
+              Text(
+                reporte.titulo,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${reporte.fechaInicio.day}/${reporte.fechaInicio.month}/${reporte.fechaInicio.year} — '
+                '${reporte.fechaFin.day}/${reporte.fechaFin.month}/${reporte.fechaFin.year}',
+                style: const TextStyle(color: Colors.grey, fontSize: 13),
+              ),
+              const SizedBox(height: 16),
+              if (resumen != null) ...[
+                const Text('Resumen',
+                    style:
+                        TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                const SizedBox(height: 8),
+                ...resumen.entries.map(
+                  (e) => Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(e.key, style: const TextStyle(color: Colors.grey)),
+                        Text(
+                          e.value?.toString() ?? '-',
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const Divider(height: 24),
+              ],
+              const Text('Datos',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+              const SizedBox(height: 8),
+              if (datos.isEmpty)
+                const Text('Sin datos disponibles',
+                    style: TextStyle(color: Colors.grey))
+              else
+                ...datos.entries.map(
+                  (e) => Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(
+                          child: Text(e.key,
+                              style: const TextStyle(color: Colors.grey)),
+                        ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            e.value?.toString() ?? '-',
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                            textAlign: TextAlign.end,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 

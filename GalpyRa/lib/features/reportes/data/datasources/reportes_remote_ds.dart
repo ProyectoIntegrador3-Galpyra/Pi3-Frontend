@@ -16,6 +16,7 @@ abstract class ReportesRemoteDataSource {
   });
   Future<ReporteModel> obtenerReportePorId(String id);
   Future<String> exportarReporte(String reporteId, FormatoExportacion formato);
+  Future<String> obtenerUrlDescarga(String reporteId);
   Future<void> eliminarReporte(String id);
   Future<Map<String, dynamic>> obtenerDatosDashboard(
     DateTime fechaInicio,
@@ -38,7 +39,8 @@ class ReportesRemoteDataSourceImpl implements ReportesRemoteDataSource {
       final data = ApiResponseParser.extractDataMap(response.data);
       return ReporteModel.fromBackend(data);
     } on DioException catch (e) {
-      throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al generar reporte');
+      throw ApiResponseParser.toServerException(e,
+          fallbackMessage: 'Error al generar reporte');
     }
   }
 
@@ -56,9 +58,13 @@ class ReportesRemoteDataSourceImpl implements ReportesRemoteDataSource {
         },
       );
       final items = ApiResponseParser.extractDataList(response.data);
-      return items.map((item) => ReporteModel.fromBackend(ApiResponseParser.asMap(item))).toList();
+      return items
+          .map(
+              (item) => ReporteModel.fromBackend(ApiResponseParser.asMap(item)))
+          .toList();
     } on DioException catch (e) {
-      throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al obtener reportes');
+      throw ApiResponseParser.toServerException(e,
+          fallbackMessage: 'Error al obtener reportes');
     }
   }
 
@@ -69,7 +75,8 @@ class ReportesRemoteDataSourceImpl implements ReportesRemoteDataSource {
       final data = ApiResponseParser.extractDataMap(response.data);
       return ReporteModel.fromBackend(data);
     } on DioException catch (e) {
-      throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al obtener el reporte');
+      throw ApiResponseParser.toServerException(e,
+          fallbackMessage: 'Error al obtener el reporte');
     }
   }
 
@@ -93,7 +100,28 @@ class ReportesRemoteDataSourceImpl implements ReportesRemoteDataSource {
       }
       return url;
     } on DioException catch (e) {
-      throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al exportar reporte');
+      throw ApiResponseParser.toServerException(e,
+          fallbackMessage: 'Error al exportar reporte');
+    }
+  }
+
+  @override
+  Future<String> obtenerUrlDescarga(String reporteId) async {
+    try {
+      final response = await _httpClient.get(
+        '${ApiEndpoints.reporteById(reporteId)}/descargar',
+      );
+      final data = ApiResponseParser.extractDataMap(response.data);
+      final url = data['url']?.toString();
+      if (url == null || url.isEmpty) {
+        throw const ServerException(message: 'No se recibió url de descarga');
+      }
+      return url;
+    } on DioException catch (e) {
+      throw ApiResponseParser.toServerException(
+        e,
+        fallbackMessage: 'Error al obtener URL de descarga',
+      );
     }
   }
 
@@ -102,7 +130,8 @@ class ReportesRemoteDataSourceImpl implements ReportesRemoteDataSource {
     try {
       await _httpClient.delete(ApiEndpoints.reporteById(id));
     } on DioException catch (e) {
-      throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al eliminar reporte');
+      throw ApiResponseParser.toServerException(e,
+          fallbackMessage: 'Error al eliminar reporte');
     }
   }
 
@@ -128,7 +157,8 @@ class ReportesRemoteDataSourceImpl implements ReportesRemoteDataSource {
         'alertas': data['alertas'] is List ? data['alertas'] : <dynamic>[],
       };
     } on DioException catch (e) {
-      throw ApiResponseParser.toServerException(e, fallbackMessage: 'Error al obtener dashboard');
+      throw ApiResponseParser.toServerException(e,
+          fallbackMessage: 'Error al obtener dashboard');
     }
   }
 }

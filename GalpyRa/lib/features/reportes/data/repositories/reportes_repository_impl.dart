@@ -73,6 +73,18 @@ class ReportesRepositoryImpl implements ReportesRepository {
   }
 
   @override
+  Future<Either<Failure, String>> obtenerUrlDescarga(String reporteId) async {
+    try {
+      final url = await remoteDataSource.obtenerUrlDescarga(reporteId);
+      return Right(url);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
+    } catch (e) {
+      return Left(ServerFailure(message: 'Error al descargar reporte: $e'));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> eliminarReporte(String id) async {
     try {
       await remoteDataSource.eliminarReporte(id);
@@ -98,7 +110,8 @@ class ReportesRepositoryImpl implements ReportesRepository {
     } on ServerException catch (e) {
       return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } catch (e) {
-      return Left(ServerFailure(message: 'Error al obtener datos dashboard: $e'));
+      return Left(
+          ServerFailure(message: 'Error al obtener datos dashboard: $e'));
     }
   }
 }

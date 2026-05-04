@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 import '../../../../core/errors/failure.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../domain/entities/user.dart';
@@ -35,11 +36,19 @@ class AuthRepositoryImpl implements AuthRepository {
       }
       final userData = response['user'] as Map<String, dynamic>;
       final user = UserModel.fromJson(userData);
+      final decodedToken = JwtDecoder.decode(accessToken);
+      final roleValue = (decodedToken['rol'] ?? decodedToken['role'] ?? '')
+          .toString()
+          .trim()
+          .toUpperCase();
 
       // Cache tokens and user
       await _localDataSource.cacheToken(accessToken);
       await _localDataSource.cacheRefreshToken(refreshToken);
       await _localDataSource.cacheUser(user);
+      if (roleValue.isNotEmpty) {
+        await _localDataSource.cacheUserRole(roleValue);
+      }
 
       return Right(user);
     } on ServerException catch (e) {
@@ -66,6 +75,36 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } catch (e) {
       await _localDataSource.clearAuthData();
+      return const Left(UnknownFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> forgotPassword({required String email}) async {
+    try {
+      await _remoteDataSource.forgotPassword(email: email);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
+    } catch (e) {
+      return const Left(UnknownFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> resetPassword({
+    required String token,
+    required String nuevaPassword,
+  }) async {
+    try {
+      await _remoteDataSource.resetPassword(
+        token: token,
+        nuevaPassword: nuevaPassword,
+      );
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
+    } catch (e) {
       return const Left(UnknownFailure());
     }
   }

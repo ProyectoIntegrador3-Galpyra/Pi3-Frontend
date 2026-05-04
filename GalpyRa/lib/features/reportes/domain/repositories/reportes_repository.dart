@@ -22,6 +22,9 @@ abstract class ReportesRepository {
     FormatoExportacion formato,
   );
 
+  /// Obtiene la URL de descarga del reporte
+  Future<Either<Failure, String>> obtenerUrlDescarga(String reporteId);
+
   /// Elimina un reporte
   Future<Either<Failure, void>> eliminarReporte(String id);
 

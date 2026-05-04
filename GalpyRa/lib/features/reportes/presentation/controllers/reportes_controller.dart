@@ -39,7 +39,8 @@ class ReportesState {
       isLoading: isLoading ?? this.isLoading,
       isGenerando: isGenerando ?? this.isGenerando,
       reportes: reportes ?? this.reportes,
-      reporteActual: clearReporteActual ? null : (reporteActual ?? this.reporteActual),
+      reporteActual:
+          clearReporteActual ? null : (reporteActual ?? this.reporteActual),
       datosDashboard: datosDashboard ?? this.datosDashboard,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     );
@@ -131,12 +132,26 @@ class ReportesController extends StateNotifier<ReportesState> {
     );
   }
 
+  /// Obtiene la URL de descarga de un reporte
+  Future<String?> obtenerUrlDescarga(String reporteId) async {
+    final result = await _repository.obtenerUrlDescarga(reporteId);
+
+    return result.fold(
+      (failure) {
+        state = state.copyWith(errorMessage: mapFailureMessage(failure));
+        return null;
+      },
+      (url) => url,
+    );
+  }
+
   /// Carga datos del dashboard
   Future<void> cargarDatosDashboard({
     DateTime? fechaInicio,
     DateTime? fechaFin,
   }) async {
-    final inicio = fechaInicio ?? DateTime.now().subtract(const Duration(days: 30));
+    final inicio =
+        fechaInicio ?? DateTime.now().subtract(const Duration(days: 30));
     final fin = fechaFin ?? DateTime.now();
 
     state = state.copyWith(isLoading: true, clearError: true);

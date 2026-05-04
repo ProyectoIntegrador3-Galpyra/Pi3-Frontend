@@ -59,9 +59,12 @@ class GalponCard extends StatelessWidget {
                                 color: AppColors.textSecondary,
                               ),
                               const SizedBox(width: 4),
-                              Text(
-                                galpon.ubicacion!,
-                                style: Theme.of(context).textTheme.bodySmall,
+                              Flexible(
+                                child: Text(
+                                  galpon.ubicacion!,
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                             ],
                           ),
